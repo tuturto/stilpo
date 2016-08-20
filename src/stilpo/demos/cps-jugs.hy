@@ -25,7 +25,8 @@
 (require hy.contrib.anaphoric)
 (require stilpo.cps)
 
-(import [stilpo.cps [breadth-first-solver valid-operators]])
+(import [stilpo.cps [breadth-first-solver depth-first-solver
+                     valid-operators]])
 
 (defn pretty-print [path]
   (when path
@@ -105,5 +106,16 @@
                                    :operators operators
                                    :is-identical identical?))
 
+(def d-solve (depth-first-solver :is-goal goal?
+                                 :operators operators
+                                 :is-identical identical?))
+
+(print)
+(print "solving jugs problem with breadth first search")
 (-> (b-solve state)
+    (pretty-print))
+
+(print)
+(print "solving jugs problem with depth first search")
+(-> (d-solve state)
     (pretty-print))

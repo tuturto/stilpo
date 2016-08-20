@@ -20,7 +20,6 @@
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;; THE SOFTWARE.
 
-(require hymn.dsl)
 (require hy.contrib.anaphoric)
 (import [copy [copy]])
 
@@ -41,7 +40,31 @@
 (defn breadth-first-solver [goal? operators identical?]
   "create classical breadth first solver"
   (fn [state]
-    "try to solve path from given path to goal and return (maybe path)."
+    "try to solve path from given path to goal and return path"
+    (setv solution nil)
+    (setv queue [])
+    (.append queue [{:state state}])
+
+    (while queue
+      (setv current-path (.pop queue 0))
+      (setv current-state (:state (last current-path)))
+      (setv possible-operators (operators current-state))
+      (setv new-steps (list (ap-map {:action it
+                                     :state ((:action it) current-state)}
+                                    possible-operators)))
+      (setv solution (ap-if (list (filter (fn [x] (goal? (:state x))) new-steps))
+                            (do (.append current-path (first it))
+                                (.clear queue)
+                                current-path)
+                            (.extend queue
+                                     (ap-map (create-new-path current-path it)
+                                             (remove-loops current-path new-steps identical?))))))
+    solution))
+
+(defn depth-first-solver [goal? operators identical?]
+  "create classical depth first solver"
+  (fn [state]
+    "try to solve path from given path to goal and return path"
     (setv solution nil)
     (setv queue [])
     (.append queue [{:state state}])
