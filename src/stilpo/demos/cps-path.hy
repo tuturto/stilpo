@@ -21,8 +21,9 @@
 ;; THE SOFTWARE.
 
 (require hy.contrib.anaphoric)
+(require stilpo.cps)
 
-(import [stilpo.cps [breadth-first-solver]])
+(import [stilpo.cps [breadth-first-solver depth-first-solver valid-operators]])
 
 (defn create-maze [&rest rows]
   "create maze"
@@ -45,10 +46,14 @@
 
 (defn pretty-print [path]
   (when path
-    (ap-each path
-             (cond [(in :action it) (print (:desc (:action it)))]
-                   [true (print (.format "current location: {0}"
-                                         (:location (:state it))))]))))
+    (setv path-locations (list-comp (:location (:state elem)) [elem path]))
+    (setv maze (:maze (:state (first path))))
+    (for [y (range 10)]
+      (for [x (range 16)]
+        (cond [(in (, x y) path-locations) (print "." :end "")]
+              [(= (get maze (, x y)) "x") (print "x" :end "")]
+              [true (print " " :end "")]))
+      (print ""))))
 
 (def state
   (create-maze "xxxxxxxxxxxxxxxx"
@@ -116,5 +121,14 @@
                                    :operators operators
                                    :is-identical identical?))
 
+(def d-solve (depth-first-solver :is-goal goal?
+                                 :operators operators
+                                 :is-identical identical?))
+
+(print "solving maze breadth first")
 (-> (b-solve state)
+    (pretty-print))
+
+(print "solving maze depth first")
+(-> (d-solve state)
     (pretty-print))
