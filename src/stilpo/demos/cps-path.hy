@@ -44,7 +44,8 @@
    :location start
    :goal goal})
 
-(defn pretty-print [path]
+(defn pretty-print [solution]
+  (setv path (:path solution))
   (when path
     (setv path-locations (list-comp (:location (:state elem)) [elem path]))
     (setv maze (:maze (:state (first path))))
@@ -53,14 +54,17 @@
         (cond [(in (, x y) path-locations) (print "." :end "")]
               [(= (get maze (, x y)) "x") (print "x" :end "")]
               [true (print " " :end "")]))
-      (print ""))))
+      (print ""))
+    (print "path length: " (:length solution))
+    (print "number of iterations: " (:iterations solution))))
+
 
 (def state
   (create-maze "xxxxxxxxxxxxxxxx"
                "x     x        x"
-               "x  x  x  x  x  x"
-               "x  x  x  x     x"
-               "x  x xx Sx xxx x"
+               "x  x  x Sx  x  x"
+               "x     x  x     x"
+               "x  x xx  x xxx x"
                "x  x x       x x"
                "x  x xxx   xxx x"
                "x Gx   xxxxx   x"

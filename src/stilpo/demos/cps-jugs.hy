@@ -28,14 +28,17 @@
 (import [stilpo.cps [breadth-first-solver depth-first-solver
                      valid-operators]])
 
-(defn pretty-print [path]
+(defn pretty-print [solution]
+  (setv path (:path solution))
   (when path
     (ap-each path
              (cond [(in :action it) (print (.format "{0} (jugs: {1} and {2})"
                                                     (:desc (:action it))
                                                     (:jug-4 (:state it))
                                                     (:jug-5 (:state it))))]
-                   [true (print "starting")]))))
+                   [true (print "starting")]))
+    (print "path length: " (:length solution))
+    (print "number of iterations: " (:iterations solution))))
 
 (def state {:jug-4 0
             :jug-5 0})

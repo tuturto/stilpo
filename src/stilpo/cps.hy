@@ -43,9 +43,11 @@
     "try to solve path from given path to goal and return path"
     (setv solution nil)
     (setv queue [])
+    (setv iteration 0)
     (.append queue [{:state state}])
 
     (while queue
+      (setv iteration (inc iteration))
       (setv current-path (.pop queue 0))
       (setv current-state (:state (last current-path)))
       (setv possible-operators (operators current-state))
@@ -59,7 +61,9 @@
                             (.extend queue
                                      (ap-map (create-new-path current-path it)
                                              (remove-loops current-path new-steps identical?))))))
-    solution))
+    {:path solution
+     :length (len solution)
+     :iterations iteration}))
 
 (defn depth-first-solver [goal? operators identical?]
   "create classical depth first solver"
@@ -67,9 +71,11 @@
     "try to solve path from given path to goal and return path"
     (setv solution nil)
     (setv queue [])
+    (setv iteration 0)
     (.append queue [{:state state}])
 
     (while queue
+      (setv iteration (inc iteration))
       (setv current-path (.pop queue))
       (setv current-state (:state (last current-path)))
       (setv possible-operators (operators current-state))
@@ -83,7 +89,9 @@
                             (.extend queue
                                      (ap-map (create-new-path current-path it)
                                              (remove-loops current-path new-steps identical?))))))
-    solution))
+    {:path solution
+     :length (len solution)
+     :iterations iteration}))
 
 (defn remove-loops [path steps pred]
   (filter (fn [x]
