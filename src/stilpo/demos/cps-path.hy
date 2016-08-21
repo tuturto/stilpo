@@ -23,7 +23,9 @@
 (require hy.contrib.anaphoric)
 (require stilpo.cps)
 
-(import [stilpo.cps [breadth-first-solver depth-first-solver valid-operators]])
+(import [math [sqrt]]
+        [stilpo.cps [breadth-first-solver depth-first-solver best-first-solver
+                     a*-solver valid-operators]])
 
 (defn create-maze [&rest rows]
   "create maze"
@@ -46,17 +48,19 @@
 
 (defn pretty-print [solution]
   (setv path (:path solution))
-  (when path
-    (setv path-locations (list-comp (:location (:state elem)) [elem path]))
-    (setv maze (:maze (:state (first path))))
-    (for [y (range 10)]
-      (for [x (range 16)]
-        (cond [(in (, x y) path-locations) (print "." :end "")]
-              [(= (get maze (, x y)) "x") (print "x" :end "")]
-              [true (print " " :end "")]))
-      (print ""))
-    (print "path length: " (:length solution))
-    (print "number of iterations: " (:iterations solution))))
+  (if path
+    (do (setv path-locations (list-comp (:location (:state elem)) [elem path]))
+        (setv maze (:maze (:state (first path))))
+        (for [y (range 10)]
+          (for [x (range 16)]
+            (cond [(in (, x y) path-locations) (print "." :end "")]
+                  [(= (get maze (, x y)) "x") (print "x" :end "")]
+                  [true (print " " :end "")]))
+          (print ""))
+        (print "path length:" (:length solution))
+        (print "number of iterations:" (:iterations solution)))
+    (do (print "no solution found")
+        (print "number of iterations:" (:iterations solution)))))
 
 
 (def state
@@ -74,6 +78,22 @@
 (defn goal? [state]
   "have we reached goal?"
   (= (:location state) (:goal state)))
+
+(defn distance-left [state]
+  "how far this state is from goal"
+  (let [[start (:location state)]
+        [end (:goal state)]
+        [dx (abs (- (first start) (first end)))]
+        [dy (abs (- (second start) (second end)))]]
+    (sqrt (+ (* dx dx) (* dy dy)))))
+
+(defn distance-between [state1 state2]
+  "how far between two states"
+  (let [[start (:location state1)]
+        [end (:location state2)]
+        [dx (abs (- (first start) (first end)))]
+        [dy (abs (- (second start) (second end)))]]
+    (sqrt (+ (* dx dx) (* dy dy)))))
 
 (defn operators [state]
   "all valid operators for given state and their descriptions"
@@ -129,10 +149,30 @@
                                  :operators operators
                                  :is-identical identical?))
 
-(print "solving maze breadth first")
+(def best-solve (best-first-solver :is-goal goal?
+                                   :distance distance-left
+                                   :operators operators
+                                   :is-identical identical?))
+
+(def a* (a*-solver :is-goal goal?
+                   :distance-left distance-left
+                   :distance-between distance-between
+                   :operators operators
+                   :is-identical identical?))
+
+(print "\nsolving a* first")
+(-> (a* state)
+    (pretty-print))
+
+(print "\nsolving maze best first")
+(-> (best-solve state)
+    (pretty-print))
+
+(print "\nsolving maze breadth first")
 (-> (b-solve state)
     (pretty-print))
 
-(print "solving maze depth first")
+(print "\nsolving maze depth first")
 (-> (d-solve state)
     (pretty-print))
+
