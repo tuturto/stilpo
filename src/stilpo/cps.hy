@@ -21,8 +21,7 @@
 ;; THE SOFTWARE.
 
 (require hy.contrib.anaphoric)
-(import [copy [copy]]
-        [math [sqrt]])
+(import [copy [copy]])
 
 (defmacro operator [name desc guard &rest action]
   `(defn ~name [state]
@@ -40,61 +39,19 @@
 
 (defn breadth-first-solver [goal? operators identical?]
   "create classical breadth first solver"
-  (fn [state]
-    "try to solve path from given path to goal and return path"
-    (setv solution nil)
-    (setv queue [])
-    (setv iteration 0)
-    (.append queue [{:state state}])
-
-    (while queue
-      (setv iteration (inc iteration))
-      (setv current-path (.pop queue 0))
-      (setv current-state (:state (last current-path)))
-      (setv possible-operators (operators current-state))
-      (setv new-steps (list (ap-map {:action it
-                                     :state ((:action it) current-state)}
-                                    possible-operators)))
-      (setv solution (ap-if (list (filter (fn [x] (goal? (:state x))) new-steps))
-                            (do (.append current-path (first it))
-                                (.clear queue)
-                                current-path)
-                            (.extend queue
-                                     (ap-map (create-new-path current-path it)
-                                             (remove-loops current-path new-steps identical?))))))
-    {:path solution
-     :length (len solution)
-     :iterations iteration}))
+  (solver (fn [queue] (.pop queue 0))
+          goal? operators identical?))
 
 (defn depth-first-solver [goal? operators identical?]
   "create classical depth first solver"
-  (fn [state]
-    "try to solve path from given path to goal and return path"
-    (setv solution nil)
-    (setv queue [])
-    (setv iteration 0)
-    (.append queue [{:state state}])
-
-    (while queue
-      (setv iteration (inc iteration))
-      (setv current-path (.pop queue))
-      (setv current-state (:state (last current-path)))
-      (setv possible-operators (operators current-state))
-      (setv new-steps (list (ap-map {:action it
-                                     :state ((:action it) current-state)}
-                                    possible-operators)))
-      (setv solution (ap-if (list (filter (fn [x] (goal? (:state x))) new-steps))
-                            (do (.append current-path (first it))
-                                (.clear queue)
-                                current-path)
-                            (.extend queue
-                                     (ap-map (create-new-path current-path it)
-                                             (remove-loops current-path new-steps identical?))))))
-    {:path solution
-     :length (len solution)
-     :iterations iteration}))
+  (solver (fn [queue] (.pop queue))
+          goal? operators identical?))
 
 (defn best-first-solver [goal? operators identical? distance]
+  "create classical best first solver"
+  (solver closest-to-goal goal? operators identical? distance))
+
+(defn solver [next-path goal? operators identical? &optional distance]
   "create classical best first solver"
   (fn [state]
     "try to solve path from given path to goal and return path"
@@ -102,19 +59,21 @@
     (setv queue [])
     (setv iteration 0)
     (.append queue [{:state state}])
-    (assoc (first (first queue))
-           :distance-left
-           (distance state))
+    (when distance
+      (assoc (first (first queue))
+             :distance-left
+             (distance state)))
     
     (while queue
       (setv iteration (inc iteration))
-      (setv current-path (closest-to-goal queue))
+      (setv current-path (next-path queue))
       (setv current-state (:state (last current-path)))
       (setv possible-operators (operators current-state))
       (setv new-steps (list (ap-map {:action it
                                      :state ((:action it) current-state)}
                                     possible-operators)))
-      (calculate-distances distance new-steps)
+      (when distance
+        (calculate-distances distance new-steps))
       (setv solution (ap-if (list (filter (fn [x] (goal? (:state x))) new-steps))
                             (do (.append current-path (first it))
                                 (.clear queue)
