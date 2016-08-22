@@ -1,6 +1,54 @@
 Classic Problem Solver
 ======================
 
+API
+---
+
+``depth-first-solver`` creates depth first solver.
+
+.. code:: hy
+
+   (depth-first-solver :is-goal goal?
+                       :operators operators
+                       :is-identical identical?)
+
+   
+``breadth-first-solver`` creates breadth first solver.
+
+.. code:: hy
+
+   (breadth-first-solver :is-goal goal?
+                         :operators operators
+                         :is-identical identical?)
+
+                         
+``best-first-solver`` creates best first solver.
+
+.. code:: hy
+
+   (best-first-solver :is-goal goal?
+                      :operators operators
+                      :is-identical identical?
+                      :distance distance-left)
+
+``goal?`` is a function that accepts a single parameter ``state`` and
+returns ``true`` or ``false`` indicating if the goal has been reached.
+
+``operators`` is a function that accepts a single parameter and returns
+a list of tuples where first element is a function that can create a new
+state from old one and second element is textual description of the transition.
+
+``identical?`` is a function accepting two states and returning ``true`` or
+``false`` indicating if the states are considered equal. This function is
+used to detect loops in search path.
+
+``distance`` is a function that estimates distance left for given state. It
+is used to optimize search path in best first search.
+
+
+Example
+-------
+
 Classic problem solver (CPS for short) is a solver based on simple search and
 goal detecting routine. Systems starts from an initial state and expands
 through problem space by trying different operations according to given
@@ -111,9 +159,7 @@ Function simple walks the path and prints out textual info of action taken and
 amount of water held by each jug:
 
    | starting
-   | fill 5 liter jug with water (jugs: 0 and 5)
-   | fill 4 liter jug with water (jugs: 4 and 5)
-   | pour 5 liter jug empty (jugs: 4 and 0)
+   | fill 4 liter jug with water (jugs: 4 and 0)
    | pour water from 4 liter jug to 5 liter jug (jugs: 0 and 4)
    | fill 4 liter jug with water (jugs: 4 and 4)
    | pour water from 4 liter jug to 5 liter jug (jugs: 3 and 5)
