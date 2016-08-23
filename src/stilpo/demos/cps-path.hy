@@ -25,7 +25,7 @@
 
 (import [math [sqrt]]
         [stilpo.cps [breadth-first-solver depth-first-solver best-first-solver
-                     valid-operators]])
+                     a*-solver valid-operators]])
 
 (defn create-maze [&rest rows]
   "create maze"
@@ -154,15 +154,25 @@
                                    :operators operators
                                    :is-identical identical?))
 
-(print "\nsolving maze best first")
-(-> (best-solve state)
+
+(def a* (a*-solver :is-goal goal?
+                   :distance distance-left
+                   :distance-between distance-between
+                   :operators operators
+                   :is-identical identical?))
+
+(print "\nsolving maze depth first")
+(-> (d-solve state)
     (pretty-print))
 
 (print "\nsolving maze breadth first")
 (-> (b-solve state)
     (pretty-print))
 
-(print "\nsolving maze depth first")
-(-> (d-solve state)
+(print "\nsolving maze best first")
+(-> (best-solve state)
     (pretty-print))
 
+(print "\nsolving a*")
+(-> (a* state)
+    (pretty-print))

@@ -51,18 +51,23 @@
   "create classical best first solver"
   (solver closest-to-goal goal? operators identical? distance))
 
-(defn solver [next-path goal? operators identical? &optional distance]
+(defn a*-solver [goal? operators identical? distance distance-between]
+  "create a* solver"
+  (solver shortest-path goal? operators identical? distance distance-between))
+
+(defn solver [next-path goal? operators identical? &optional distance distance-between]
   "create classical best first solver"
   (fn [state]
     "try to solve path from given path to goal and return path"
     (setv solution nil)
     (setv queue [])
     (setv iteration 0)
-    (.append queue [{:state state}])
-    (when distance
-      (assoc (first (first queue))
-             :distance-left
-             (distance state)))
+    (if distance
+      (.append queue [{:state state
+                       :distance-left (distance state)
+                       :distance-so-far 0
+                       :total-distance (distance state)}])
+      (.append queue [{:state state}]))
     
     (while queue
       (setv iteration (inc iteration))
@@ -72,8 +77,11 @@
       (setv new-steps (list (ap-map {:action it
                                      :state ((:action it) current-state)}
                                     possible-operators)))
-      (when distance
-        (calculate-distances distance new-steps))
+      (cond [(and distance distance-between) (calculate-distances distance
+                                                                  new-steps
+                                                                  distance-between
+                                                                  current-path)]
+            [distance (calculate-distances distance new-steps)])
       (setv solution (ap-if (list (filter (fn [x] (goal? (:state x))) new-steps))
                             (do (.append current-path (first it))
                                 (.clear queue)
@@ -97,10 +105,31 @@
   (.remove queue res)
   res)
 
-(defn calculate-distances [distance-left steps]
+(defn shortest-path [queue]
+  (setv res (first queue))
+  (setv distance (:total-distance (last res)))
+  (ap-each queue
+           (do (setv new-distance (:total-distance (last it)))
+               (when (< new-distance distance)
+                 (setv distance new-distance)
+                 (setv res it))))
+  (.remove queue res)
+  res)
+
+(defn calculate-distances [distance-left steps &optional distance-between previous-path]
   (when steps
+    (when previous-path
+      (setv previous-step (last previous-path))
+      (setv previous-state (:state previous-step)))
+
     (ap-each steps
-             (assoc it :distance-left (distance-left (:state it))))))
+             (do (assoc it :distance-left (distance-left (:state it)))
+                 (when distance-between
+                   (setv distance-so-far (+ (distance-between (:state it) previous-state)
+                                            (:distance-so-far previous-step)))
+                   (setv total-distance (+ distance-so-far (:distance-left it)))
+                   (assoc it :distance-so-far distance-so-far)
+                                      (assoc it :total-distance total-distance))))))
 
 (defn remove-loops [path steps pred]
   (filter (fn [x]

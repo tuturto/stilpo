@@ -31,6 +31,20 @@ API
                       :is-identical identical?
                       :distance distance-left)
 
+``a*-solver`` creates a solver that implements a* search.
+
+.. code:: hy
+
+   (a*-solver :is-goal goal?
+              :distance distance-left
+              :distance-between distance-between
+              :operators operators
+              :is-identical identical?))
+
+.. warning::
+   Current implementation of a* search is very slow and generally
+   shouldn't be used before it has been fixed.
+              
 ``goal?`` is a function that accepts a single parameter ``state`` and
 returns ``true`` or ``false`` indicating if the goal has been reached.
 
@@ -43,8 +57,10 @@ state from old one and second element is textual description of the transition.
 used to detect loops in search path.
 
 ``distance`` is a function that estimates distance left for given state. It
-is used to optimize search path in best first search.
+is used to optimize search path in best first and a* search.
 
+``distance-between`` is a function that can calculate cost or distance between
+two different states. It is used to optimize a* search.
 
 Example
 -------
