@@ -21,7 +21,9 @@
 ;; THE SOFTWARE.
 
 (require hy.contrib.anaphoric)
-(import [copy [copy]])
+(import [copy [copy]]
+        [heapq [heappush heappop]]
+        random)
 
 (defmacro operator [name desc guard &rest action]
   `(defn ~name [state]
@@ -40,22 +42,36 @@
 (defn breadth-first-solver [goal? operators identical?]
   "create classical breadth first solver"
   (solver (fn [queue] (.pop queue 0))
-          goal? operators identical?))
+          goal? operators identical?
+          (fn [queue coll]
+            (.extend queue coll))))
 
 (defn depth-first-solver [goal? operators identical?]
   "create classical depth first solver"
   (solver (fn [queue] (.pop queue))
-          goal? operators identical?))
+          goal? operators identical?
+          (fn [queue coll]
+            (.extend queue coll))))
 
 (defn best-first-solver [goal? operators identical? distance]
   "create classical best first solver"
-  (solver closest-to-goal goal? operators identical? distance))
+  (solver closest-to-goal goal? operators identical?
+          (fn [queue coll]
+            (.extend queue coll))
+          distance))
 
 (defn a*-solver [goal? operators identical? distance distance-between]
   "create a* solver"
-  (solver shortest-path goal? operators identical? distance distance-between))
+  (solver (fn [queue]
+            (nth (heappop queue) 2))
+          goal? operators identical?
+          (fn [queue coll]
+            (for [item coll]
+              (heappush queue (, (:total-distance (last item)) (.random random) item))))
+          distance distance-between))
 
-(defn solver [next-path goal? operators identical? &optional distance distance-between]
+(defn solver [next-path goal? operators identical? add-queue
+              &optional distance distance-between]
   "create classical best first solver"
   (fn [state]
     "try to solve path from given path to goal and return path"
@@ -63,11 +79,11 @@
     (setv queue [])
     (setv iteration 0)
     (if distance
-      (.append queue [{:state state
-                       :distance-left (distance state)
-                       :distance-so-far 0
-                       :total-distance (distance state)}])
-      (.append queue [{:state state}]))
+      (add-queue queue [[{:state state
+                         :distance-left (distance state)
+                         :distance-so-far 0
+                         :total-distance (distance state)}]])
+      (add-queue queue [[{:state state}]]))
     
     (while queue
       (setv iteration (inc iteration))
@@ -86,9 +102,9 @@
                             (do (.append current-path (first it))
                                 (.clear queue)
                                 current-path)
-                            (.extend queue
-                                     (ap-map (create-new-path current-path it)
-                                             (remove-loops current-path new-steps identical?))))))
+                            (add-queue queue
+                                       (ap-map (create-new-path current-path it)
+                                               (remove-loops current-path new-steps identical?))))))
     {:path solution
      :length (len solution)
      :iterations iteration}))

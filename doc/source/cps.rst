@@ -41,9 +41,6 @@ API
               :operators operators
               :is-identical identical?))
 
-.. warning::
-   Current implementation of a* search is very slow and generally
-   shouldn't be used before it has been fixed.
               
 ``goal?`` is a function that accepts a single parameter ``state`` and
 returns ``true`` or ``false`` indicating if the goal has been reached.
