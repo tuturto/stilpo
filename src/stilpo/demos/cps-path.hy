@@ -81,19 +81,16 @@
 
 (defn distance-left [state]
   "how far this state is from goal"
-  (let [[start (:location state)]
-        [end (:goal state)]
-        [dx (abs (- (first start) (first end)))]
-        [dy (abs (- (second start) (second end)))]]
-    (sqrt (+ (* dx dx) (* dy dy)))))
+  (distance-between-two-points (:location state) (:goal state)))
 
 (defn distance-between [state1 state2]
   "how far between two states"
-  (let [[start (:location state1)]
-        [end (:location state2)]
-        [dx (abs (- (first start) (first end)))]
-        [dy (abs (- (second start) (second end)))]]
-    (sqrt (+ (* dx dx) (* dy dy)))))
+  (distance-between-two-points (:location state1) (:location state2)))
+
+(defn distance-between-two-points [point1 point2]
+  "calculate distance between two arbitrary points on a plane"
+  (sqrt (+ (pow (- (first point1) (first point2)) 2)
+           (pow (- (second point1) (second point2)) 2))))
 
 (defn operators [state]
   "all valid operators for given state and their descriptions"
