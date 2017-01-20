@@ -43,14 +43,14 @@ API
 
               
 ``goal?`` is a function that accepts a single parameter ``state`` and
-returns ``true`` or ``false`` indicating if the goal has been reached.
+returns ``True`` or ``False`` indicating if the goal has been reached.
 
 ``operators`` is a function that accepts a single parameter and returns
 a list of tuples where first element is a function that can create a new
 state from old one and second element is textual description of the transition.
 
-``identical?`` is a function accepting two states and returning ``true`` or
-``false`` indicating if the states are considered equal. This function is
+``identical?`` is a function accepting two states and returning ``True`` or
+``False`` indicating if the states are considered equal. This function is
 used to detect loops in search path.
 
 ``distance`` is a function that estimates distance left for given state. It
@@ -76,7 +76,7 @@ A high level example of typical solver initialization and execution:
 
 .. code:: hy
 
-   (require stilpo.cps)
+   (require [stilpo.cps [operator]])
    (import [stilpo.cps [breadth-first-solver valid-operators]])
           
    (def b-solve (breadth-first-solver :is-goal goal?
@@ -156,7 +156,7 @@ We of course would like to print out our solution, so we define
 
 .. code:: hy
 
-   (require hy.contrib.anaphoric)
+   (require [hy.extra.anaphoric [ap-each]])
           
    (defn pretty-print [path]
      (when path

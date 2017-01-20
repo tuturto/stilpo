@@ -20,8 +20,7 @@
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;; THE SOFTWARE.
 
-(require hy.contrib.anaphoric)
-(require stilpo.cps)
+(require [stilpo.cps [operator]])
 
 (import [math [sqrt]]
         [stilpo.cps [breadth-first-solver depth-first-solver best-first-solver
@@ -55,7 +54,7 @@
           (for [x (range 16)]
             (cond [(in (, x y) path-locations) (print "." :end "")]
                   [(= (get maze (, x y)) "x") (print "x" :end "")]
-                  [true (print " " :end "")]))
+                  [True (print " " :end "")]))
           (print ""))
         (print "path length:" (:length solution))
         (print "number of iterations:" (:iterations solution)))
@@ -95,7 +94,7 @@
 (defn operators [state]
   "all valid operators for given state and their descriptions"
   (list (filter (fn [x]
-                  (if x true false))
+                  (if x True False))
                 (map (fn [x] (x state))
                      [move-north? move-east? move-west? move-south?]))))
 
@@ -106,7 +105,7 @@
 
 (defn move [state new-location description]
   "helper function to create operator description pair"
-  (let [[maze (:maze state)]]
+  (let [maze (:maze state)]
     (if (and (in new-location maze)
              (= (get maze new-location) " "))
       {:action (fn [state]
@@ -116,26 +115,26 @@
        :desc (.format "{0}: {1}"
                       description
                       new-location)}
-      false)))
+      False)))
 
 (defn move-north? [state]
   "operator to move north"
-  (let [[(, x y) (:location state)]]
+  (let [(, x y) (:location state)]
     (move state (, x (dec y)) "move north")))
 
 (defn move-east? [state]
   "operator to move east"
-  (let [[(, x y) (:location state)]]
+  (let [(, x y) (:location state)]
     (move state (, (inc x) y) "move east")))
 
 (defn move-south? [state]
   "operator to move south"
-  (let [[(, x y) (:location state)]]
+  (let [(, x y) (:location state)]
     (move state (, x (inc y)) "move south")))
 
 (defn move-west? [state]
   "operator to move west"
-  (let [[(, x y) (:location state)]]
+  (let [(, x y) (:location state)]
     (move state (, (dec x) y) "move west")))
 
 (def b-solve (breadth-first-solver :is-goal goal?

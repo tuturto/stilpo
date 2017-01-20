@@ -22,8 +22,8 @@
 
 ;; how to measure 2 liters of water if you have 5 and 4 liter jugs at your disposal?
 
-(require hy.contrib.anaphoric)
-(require stilpo.cps)
+(require [hy.extra.anaphoric [ap-each]])
+(require [stilpo.cps [operator]])
 
 (import [stilpo.cps [breadth-first-solver depth-first-solver
                      valid-operators]])
@@ -36,7 +36,7 @@
                                                     (:desc (:action it))
                                                     (:jug-4 (:state it))
                                                     (:jug-5 (:state it))))]
-                   [true (print "starting")]))
+                   [True (print "starting")]))
     (print "path length: " (:length solution))
     (print "number of iterations: " (:iterations solution))))
 

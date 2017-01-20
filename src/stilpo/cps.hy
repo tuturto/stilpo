@@ -20,7 +20,8 @@
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;; THE SOFTWARE.
 
-(require hy.contrib.anaphoric)
+(require [hy.extra.anaphoric [ap-if ap-each ap-map]])
+
 (import [copy [copy]]
         [heapq [heappush heappop]]
         random)
@@ -35,7 +36,7 @@
 (defn valid-operators [state &rest operators]
   "given state and list of operator checks, return valid operators"
   (list (filter (fn [x]
-                  (if x true false))
+                  (if x True False))
                 (map (fn [x] (x state))
                      operators))))
 
@@ -75,7 +76,7 @@
   "create classical best first solver"
   (fn [state]
     "try to solve path from given path to goal and return path"
-    (setv solution nil)
+    (setv solution None)
     (setv queue [])
     (setv iteration 0)
     (if distance
@@ -149,10 +150,10 @@
 
 (defn remove-loops [path steps pred]
   (filter (fn [x]
-            (setv res true)
+            (setv res True)
             (for [step path]
               (when (pred (:state step) (:state x))
-                (setv res false)
+                (setv res False)
                 (break)))
             res)
           steps))
