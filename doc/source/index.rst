@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 2
 
    cps
+   tre
    license
 
 What is stilpo?
