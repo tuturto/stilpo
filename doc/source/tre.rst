@@ -50,9 +50,9 @@ assertions and rules.
 
 For example, we can express following deduction:
 
-   Hy is lisp
-   All lisps are awesome
-   Therefore, Hy is awesome
+ |  Hy is lisp
+ |  All lisps are awesome
+ |  Therefore, Hy is awesome
 
 First step is to initialize tiny rule engine and bind a symbol to it:
 
