@@ -14,14 +14,14 @@ API
 
 .. code:: hy
 
-   (assert! tre '(hy is lisp))
+   (assert! tre (hy is lisp))
 
 ``rule`` creates a new rule and inserts it into a rule engine
 
 .. code:: hy
 
-   (rule tre '(?x is lisp)
-         (assert! '(?x is awesome)))
+   (rule tre (?x is lisp)
+         (assert! (?x is awesome)))
 
 ``run`` execute tiny rule engine until all rules and assertions are processed
 
@@ -39,7 +39,8 @@ API
 
 .. code:: hy
 
-   (true? '(hy is awesome))
+   => (true? '(hy is awesome))
+   True
 
 Example
 -------
@@ -64,8 +65,8 @@ complicated and error prone system, so it was left out.
 
 .. code:: hy
 
-   (assert! tre '(Alice is parent of Bob))
-   (assert! tre '(Bob is parent of Charlie))
+   (assert! tre (Alice is parent of Bob))
+   (assert! tre (Bob is parent of Charlie))
 
 Rules are used to create new assertion and rules based on existing ones. They
 consist of a pattern and body. When tiny rule engine executes a rule, it
@@ -76,15 +77,15 @@ body:
 
 .. code:: hy
 
-   (rule tre '(?x is parent of ?y)
-         (assert! tre '(?y is children of ?x)))
+   (rule tre (?x is parent of ?y)
+         (assert! tre (?y is children of ?x)))
 
-   (rule tre '(?x is parent of ?y)
-         (rule tre '(?y is parent of ?z)
-               (assert! tre '(?x is grand-parent of ?z))))
+   (rule tre (?x is parent of ?y)
+         (rule tre (?y is parent of ?z)
+               (assert! tre (?x is grand-parent of ?z))))
 
-   (rule tre '(?x is grand-parent of ?y)
-         (assert! tre '(?y is grand-children of ?x)))
+   (rule tre (?x is grand-parent of ?y)
+         (assert! tre (?y is grand-children of ?x)))
 
 Final step in our example is to execute the engine and review the results,
 which should show that Alice indeed is grand parent of Charlie:
@@ -93,10 +94,10 @@ which should show that Alice indeed is grand parent of Charlie:
 
    => (run tre)
    => (show tre 'Alice)
-   '(Alice is parent of Bob)
-   '(Alice is grand-parent of Charlie)
-   '(Charlie is grand-children of Alice)
-   '(Bob is children of Alice)
+   Alice is parent of Bob
+   Alice is grand-parent of Charlie
+   Charlie is grand-children of Alice
+   Bob is children of Alice
 
    => (true? tre '(Alice is grand-parent of Charlie))
    True

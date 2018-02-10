@@ -31,19 +31,21 @@
    :rule-queue []
    :debug debug})
 
-(defn assert! [tre assertion &optional bindings]
+(defmacro/g! assert! [tre assertion &optional bindings]
   "assert a fact"
-  (if (debug tre)
-    (if bindings
-      (print "asserting" (fill-assertion assertion bindings))
-      (print "asserting" (HyExpression assertion) "<no bindings>")))
-  (setv env (if bindings
-              bindings
-              {}))
-  (setv filled-assertion (fill-assertion assertion env))
-  (when (not (or (assertion-defined? tre filled-assertion)
-                 (assertion-queued? tre filled-assertion)))
-    (.append (assertion-queue tre) filled-assertion)))
+  `(do 
+    (setv ~g!quoted (quote ~assertion))
+    (if (debug ~tre)
+      (if ~bindings
+        (print "asserting" (fill-assertion ~g!quoted ~bindings))
+        (print "asserting" (HyExpression ~g!quoted) "<no bindings>")))
+    (setv ~g!env (if ~bindings
+                   ~bindings
+                   {}))
+    (setv ~g!filled-assertion (fill-assertion ~g!quoted ~g!env))
+    (when (not (or (assertion-defined? ~tre ~g!filled-assertion)
+                   (assertion-queued? ~tre ~g!filled-assertion)))
+      (.append (assertion-queue ~tre) ~g!filled-assertion))))
 
 (defmacro/g! rule [tre pattern &rest body]
   "add new rule to tiny rule engine"
@@ -52,7 +54,7 @@
     (setv bindings None))
   
   (setv rules (list (map (fn [x]
-                           `(add-rule ~tre (new-rule ~pattern
+                           `(add-rule ~tre (new-rule (quote ~pattern)
                                                      (fn [~g!bindings] (~@x ~g!bindings))
                                                      ~bindings)))
                          (filter (fn [x] (not (symbol? x)))

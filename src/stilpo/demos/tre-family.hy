@@ -22,23 +22,23 @@
 
 ;; Is Alice grand parent of Charlie?
 
-(require [stilpo.tre [rule]])
-(import [stilpo.tre [create-tre assert! run show true?]])
+(require [stilpo.tre [assert! rule]])
+(import [stilpo.tre [create-tre run show true?]])
 
 (setv tre (create-tre "family" :debug True))
 
-(assert! tre '(Alice is parent of Bob))
-(assert! tre '(Bob is parent of Charlie))
+(assert! tre (Alice is parent of Bob))
+(assert! tre (Bob is parent of Charlie))
 
-(rule tre '(?x is parent of ?y)
-      (assert! tre '(?y is children of ?x)))
+(rule tre (?x is parent of ?y)
+      (assert! tre (?y is children of ?x)))
 
-(rule tre '(?x is parent of ?y)
-      (rule tre '(?y is parent of ?z)
-            (assert! tre '(?x is grand-parent of ?z))))
+(rule tre (?x is parent of ?y)
+      (rule tre (?y is parent of ?z)
+            (assert! tre (?x is grand-parent of ?z))))
 
-(rule tre '(?x is grand-parent of ?y)
-      (assert! tre '(?y is grand-children of ?x)))
+(rule tre (?x is grand-parent of ?y)
+      (assert! tre (?y is grand-children of ?x)))
 
 (run tre)
 
