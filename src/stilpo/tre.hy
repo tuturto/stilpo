@@ -45,11 +45,20 @@
                  (assertion-queued? tre filled-assertion)))
     (.append (assertion-queue tre) filled-assertion)))
 
-(defmacro/g! rule [tre pattern body &optional bindings]
+(defmacro/g! rule [tre pattern &rest body]
   "add new rule to tiny rule engine"
-  `(add-rule ~tre (new-rule ~pattern
-                            (fn [~g!bindings] (~@body ~g!bindings))
-                            ~bindings)))
+  (if (symbol? (last body))
+    (setv bindings (last body))
+    (setv bindings None))
+  
+  (setv rules (list (map (fn [x]
+                           `(add-rule ~tre (new-rule ~pattern
+                                                     (fn [~g!bindings] (~@x ~g!bindings))
+                                                     ~bindings)))
+                         (filter (fn [x] (not (symbol? x)))
+                                 body))))
+  `(do
+    ~@rules))
 
 (defn run [tre]
   "process tre until all queues are empty"
