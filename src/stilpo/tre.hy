@@ -74,10 +74,10 @@
   "show all assertions relating to given symbol"
   (ap-each (assertions tre)
            (when (in symbol it)
-             (print it)))
+             (print (.join " " it))))
   (ap-each (assertion-queue tre)
            (when (in symbol it)
-             (print it))))
+             (print (.join " " it)))))
 
 (defn title [tre]
   "title of tre"
