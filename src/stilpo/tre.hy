@@ -177,9 +177,10 @@
               (in pattern-sym env)
               (= (get env pattern-sym) assertion-sym)) env]
         [(and (var? pattern-sym)
-              (not (in pattern-sym env))) (add-binding env 
-                                                       pattern-sym 
-                                                       assertion-sym)]
+              (not (in pattern-sym env))
+              (not (in assertion-sym (.values env)))) (add-binding env 
+                                                                   pattern-sym 
+                                                                   assertion-sym)]
         [True None]))
 
 (defn fill-assertion [assertion bindings]
