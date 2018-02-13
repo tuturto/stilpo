@@ -123,9 +123,9 @@
     (setv processed-rule (.pop (rule-queue tre)))
     (.append (rules tre) processed-rule)
     (ap-each (assertions tre)
-             (run-rule tre processed-rule it))))
+             (run-rule processed-rule it))))
 
-(defn run-rule [tre rule assertion]
+(defn run-rule [rule assertion]
   "run rule for assertion"
   (setv bindings (unify assertion
                         (first rule)
@@ -152,7 +152,7 @@
     (when (not (assertion-defined? tre new-assertion))
       (.append (assertions tre) new-assertion)
       (ap-each (rules tre)
-               (run-rule tre it new-assertion)))))
+               (run-rule it new-assertion)))))
 
 (defn assertion-defined? [tre assertion]
   "check if given assertion is already defined"
