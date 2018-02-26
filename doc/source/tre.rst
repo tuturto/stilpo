@@ -46,10 +46,11 @@ API
 
 .. code:: hy
 
-   => (push-tre tre "Assuming Hy is using flux-capacitor")
-   => (assert! tre (hy uses flux-capacitor))
    => (rule tre (?x uses flux-capacitor)
             (assert! tre (?x is from future)))
+
+   => (push-tre tre "Assuming Hy is using flux-capacitor")
+   => (assert! tre (hy uses flux-capacitor))
    => (run tre)
    => (true? tre '(hy is from future))
    True
