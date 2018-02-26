@@ -23,7 +23,7 @@
 ;; Is Alice grand parent of Charlie?
 
 (require [stilpo.tre [assert! rule]])
-(import [stilpo.tre [create-tre run show true?]])
+(import [stilpo.tre [create-tre run show true? push-tre pop-tre]])
 
 (setv tre (create-tre "family" :debug True))
 
@@ -51,3 +51,18 @@
 
 (show tre 'Bob)
 (show tre 'Charlie)
+
+;; Who is Daemon?
+
+(push-tre tre "Assuming Daemon is really old")
+
+(assert! tre (Daemon is parent of Alice))
+(run tre)
+(show tre 'Daemon)
+
+(pop-tre tre)
+(push-tre tre "Assuming Daemon is really young")
+
+(assert! tre (Charlie is parent of Daemon))
+(run tre)
+(show tre 'Daemon)

@@ -21,7 +21,7 @@ API
 .. code:: hy
 
    (rule tre (?x is lisp)
-         (assert! (?x is awesome)))
+         (assert! tre (?x is awesome)))
 
 ``run`` execute tiny rule engine until all rules and assertions are processed
 
@@ -33,14 +33,41 @@ API
 
 .. code:: hy
 
-   (show 'hy)
+   (show tre 'hy)
 
 ``true?`` check if given assertion holds
 
 .. code:: hy
 
-   => (true? '(hy is awesome))
+   => (true? tre '(hy is awesome))
    True
+
+``push-tre`` creates a new context where to try things
+
+.. code:: hy
+
+   => (push-tre tre "Assuming Hy is using flux-capacitor")
+   => (assert! tre (hy uses flux-capacitor))
+   => (rule tre (?x uses flux-capacitor)
+            (assert! tre (?x is from future)))
+   => (run tre)
+   => (true? tre '(hy is from future))
+   True
+
+``frame-title`` retrieves name of current frame
+
+.. code:: hy
+
+   => (frame-title tre)
+   "Assyming Hy is using flux-capacitor"
+
+``pop-tre`` discards the most recent frame
+
+.. code:: hy
+
+   => (pop-tre tre)
+   => (true? tre '(hy is from future))
+   False
 
 Example
 -------
@@ -106,3 +133,4 @@ The order of adding rules and assertions into tiny rule engine doesn't matter.
 Engine will keep processing rules until no further changes occur in assertions.
 It is even possible to run tiny rule engine in REPL, working with rules and
 assertions step by step.
+
