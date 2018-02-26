@@ -25,11 +25,17 @@
 (defn create-tre [tre-name &optional [debug False]]
   "create a new tiny rule engine"
   {:title tre-name
-   :assertions []
-   :rules []
+   :assertions (, (create-frame "root"))
+   :rules (, (create-frame "root"))
    :assertion-queue []
+   :assumption-queue []
    :rule-queue []
+   :a-rule-queue []
    :debug debug})
+
+(defn create-frame [desc]
+  {:description desc
+   :data []})
 
 (defmacro/g! assert! [tre assertion &optional bindings]
   "assert a fact"
@@ -54,9 +60,10 @@
     (setv bindings None))
   
   (setv rules (list (map (fn [x]
-                           `(add-rule ~tre (new-rule (quote ~pattern)
-                                                     (fn [~g!bindings] (~@x ~g!bindings))
-                                                     ~bindings)))
+                           `(queue-rule ~tre (new-rule (quote ~pattern)
+                                                       (fn [~g!bindings] (~@x ~g!bindings))
+                                                       ~bindings)
+                                        False))
                          (filter (fn [x] (not (symbol? x)))
                                  body))))
   `(do
@@ -102,26 +109,37 @@
 
 (defn assertions [tre]
   "get assertions of tre"
-  (:assertions tre))
+  (.from-iterable chain (list-comp (:data x) [x (:assertions tre)])))
 
 (defn assertion-queue [tre]
   "get assertion queue of tre"
   (:assertion-queue tre))
 
+(defn assumption-queue [tre]
+  "get assumption queue of tre"
+  (:assumption-queue tre))
+
 (defn rules [tre]
   "get rules of tre"
-  (:rules tre))
+  (.from-iterable chain (list-comp (:data x) [x (:rules tre)])))
+
+(defn add-rule [tre new-rule]
+  "add new rule to database without queuing it"
+  (.append (:data (last (:rules tre))) new-rule))
 
 (defn rule-queue [tre]
   "get rule queue of tre"
   (:rule-queue tre))
 
+(defn a-rule-queue [tre]
+  "get assumption rule queue of tre"
+  (:a-rule-queue tre))
 
 (defn process-rule-queue [tre]
   "take first rule in queue and process it"
   (when (rule-queue tre)
     (setv processed-rule (.pop (rule-queue tre)))
-    (.append (rules tre) processed-rule)
+    (add-rule tre processed-rule)
     (ap-each (assertions tre)
              (run-rule processed-rule it))))
 
@@ -133,9 +151,11 @@
   (when bindings
     ((second rule) bindings)))
 
-(defn add-rule [tre new-rule]
-  "add new rule into tre database"
-  (.append (rule-queue tre) new-rule))
+(defn queue-rule [tre new-rule assumption]
+  "queue new rule into tre database"
+  (if assumption
+    (.append (a-rule-queue tre) new-rule)
+    (.append (rule-queue tre) new-rule)))
 
 (defn new-rule [pattern body-fn &optional bindings]
   "create new rule from pattern and body"
@@ -150,9 +170,13 @@
   (when (assertion-queue tre)
     (setv new-assertion (.pop (assertion-queue tre)))
     (when (not (assertion-defined? tre new-assertion))
-      (.append (assertions tre) new-assertion)
+      (add-assertion tre new-assertion)
       (ap-each (rules tre)
                (run-rule it new-assertion)))))
+
+(defn add-assertion [tre assertion]
+  "add assertion into current frame of tre"
+  (.append (:data (last (:assertions tre))) assertion))
 
 (defn assertion-defined? [tre assertion]
   "check if given assertion is already defined"
@@ -203,3 +227,26 @@
 (defn copy-bindings [bindings]
   "create copy of bindings"
   (dict bindings))
+
+
+(defn push-tre [tre desc]
+  "pushes state of tre in stack and creates a new one"
+  (assert (not (rule-queue tre)) "unprocessed rules in queue")
+  (assert (not (assertion-queue tre)) "unprocessed assertions in queue")
+  (if (debug tre)
+    (print "Pushing to stack:" desc))
+  (assoc tre :assertions (+ (:assertions tre) (, (create-frame desc))))
+  (assoc tre :rules (+ (:rules tre) (, (create-frame desc)))))
+
+(defn pop-tre [tre]
+  "pops state of tre from stack, discarding one level of assumptions"
+  (assert (not (rule-queue tre)) "unprocessed rules in queue")
+  (assert (not (assertion-queue tre)) "unprocessed assertions in queue")
+  (if (debug tre)
+    (print "Popping from stack:" (frame-title tre)))
+  (assoc tre :assertions (tuple (butlast (:assertions tre))))
+  (assoc tre :rules (tuple (butlast (:rules tre)))))
+
+(defn frame-title [tre]
+  "get title of current frame"
+  (:description (last (:assertions tre))))
