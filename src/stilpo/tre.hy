@@ -25,8 +25,7 @@
 (defn create-tre [tre-name &optional [debug False]]
   "create a new tiny rule engine"
   {:title tre-name
-   :assertions (, (create-frame "root"))
-   :rules (, (create-frame "root"))
+   :frames (, (create-frame "root"))
    :assertion-queue []
    :assumption-queue []
    :rule-queue []
@@ -35,7 +34,8 @@
 
 (defn create-frame [desc]
   {:description desc
-   :data []})
+   :assertions []
+   :rules []})
 
 (defmacro/g! assert! [tre assertion &optional bindings]
   "assert a fact"
@@ -109,7 +109,7 @@
 
 (defn assertions [tre]
   "get assertions of tre"
-  (.from-iterable chain (list-comp (:data x) [x (:assertions tre)])))
+  (.from-iterable chain (list-comp (:assertions x) [x (:frames tre)])))
 
 (defn assertion-queue [tre]
   "get assertion queue of tre"
@@ -121,11 +121,11 @@
 
 (defn rules [tre]
   "get rules of tre"
-  (.from-iterable chain (list-comp (:data x) [x (:rules tre)])))
+  (.from-iterable chain (list-comp (:rules x) [x (:frames tre)])))
 
 (defn add-rule [tre new-rule]
   "add new rule to database without queuing it"
-  (.append (:data (last (:rules tre))) new-rule))
+  (.append (:rules (last (:frames tre))) new-rule))
 
 (defn rule-queue [tre]
   "get rule queue of tre"
@@ -176,7 +176,7 @@
 
 (defn add-assertion [tre assertion]
   "add assertion into current frame of tre"
-  (.append (:data (last (:assertions tre))) assertion))
+  (.append (:assertions (last (:frames tre))) assertion))
 
 (defn assertion-defined? [tre assertion]
   "check if given assertion is already defined"
@@ -234,9 +234,8 @@
   (assert (not (rule-queue tre)) "unprocessed rules in queue")
   (assert (not (assertion-queue tre)) "unprocessed assertions in queue")
   (if (debug tre)
-    (print "Pushing to stack:" desc))
-  (assoc tre :assertions (+ (:assertions tre) (, (create-frame desc))))
-  (assoc tre :rules (+ (:rules tre) (, (create-frame desc)))))
+    (print "Pushing to stack:" desc))  
+  (assoc tre :frames (+ (:frames tre) (, (create-frame desc)))))
 
 (defn pop-tre [tre]
   "pops state of tre from stack, discarding one level of assumptions"
@@ -244,9 +243,8 @@
   (assert (not (assertion-queue tre)) "unprocessed assertions in queue")
   (if (debug tre)
     (print "Popping from stack:" (frame-title tre)))
-  (assoc tre :assertions (tuple (butlast (:assertions tre))))
-  (assoc tre :rules (tuple (butlast (:rules tre)))))
+  (assoc tre :frames (tuple (butlast (:frames tre)))))
 
 (defn frame-title [tre]
   "get title of current frame"
-  (:description (last (:assertions tre))))
+  (:description (last (:frames tre))))
