@@ -70,6 +70,25 @@ API
    => (true? tre '(hy is from future))
    False
 
+``try-in-context`` is useful for creating a context and trying out a thing
+inside of it, before discarding the context automatically.
+
+.. code:: hy
+
+   => (rule tre (?x uses Python)
+            (assert! tre (?x is modern system)))
+   => (rule tre (?x uses Lisp)
+            (assert! tre (?x is timeless system)))
+   => (rule tre (?x uses quantum computing)
+            (assert! tre (?x is future system)))
+
+   => (try-in-context tre (hy uses quantum computing)
+                      (print (true? '(hy is future system))))
+   True
+
+   => (true? '(hy is future system))
+   False
+
 Example
 -------
 

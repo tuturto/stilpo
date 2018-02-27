@@ -252,3 +252,12 @@
 (defn frames [tre]
   "get frames of tre"
   (:frames tre))
+
+(defmacro/g! try-in-context [tre assertion &rest body]
+  `(do (run ~tre)
+       (push-tre ~tre (+ "assuming that " (.join " " (quote ~assertion))))
+       (assert! ~tre ~assertion)
+       (run ~tre)
+       (setv ~g!res (do ~@body))
+       (pop-tre ~tre)
+       ~g!res))

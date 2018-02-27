@@ -66,3 +66,19 @@
 (assert! tre (Charlie is parent of Daemon))
 (run tre)
 (show tre 'Daemon)
+
+;; Could Ezekiel be Grand-Parent of Charlie?
+
+(try-in-context tre (Ezekiel is parent of Alice)
+                (print (true? tre '(Ezekiel is grand-parent of Charlie))))
+
+(try-in-context tre (Ezekiel is parent of Bob)
+                (print (true? tre '(Ezekiel is grand-parent of Charlie)))) 
+
+;; try-in-context supports multiple code statements
+
+(try-in-context tre (Ezekiel is parent of Alice)
+                (print "Ezekiel is grand-parent of Bob:"
+                       (true? tre '(Ezekiel is grand-parent of Bob)))
+                (print "Ezekiel is grand-parent of Charlie:"
+                       (true? tre '(Ezekiel is grand-parent of Charlie))))
