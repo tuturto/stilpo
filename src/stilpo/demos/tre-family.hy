@@ -52,6 +52,20 @@
 (show tre 'Bob)
 (show tre 'Charlie)
 
+;; Sometimes you need to mark variables having unique values
+;; otherwise Billy would be sibling of Billy and Bob
+
+(rule tre (?x is parent of ?y)
+      (rule tre (?x is parent of ?z)
+            (unique ?y ?z)
+            (assert! tre (?y and ?z are siblings))))
+
+(assert! tre (Alice is parent of Billy))
+(run tre)
+
+(show tre 'Bob)
+(show tre 'Billy)
+
 ;; Who is Daemon?
 
 (push-tre tre "Assuming Daemon is really old")

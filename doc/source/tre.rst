@@ -23,6 +23,15 @@ API
    (rule tre (?x is lisp)
          (assert! tre (?x is awesome)))
 
+Sometimes you would want to force variable values be unique:
+
+.. code:: hy
+
+   (rule tre (?x is on bottom of well)
+         (rule (?y is on bottom of well)
+               (unique ?x ?y)
+               (assert! tre (?x and ?y are on bottom of well))))
+
 ``run`` execute tiny rule engine until all rules and assertions are processed
 
 .. code:: hy

@@ -59,11 +59,37 @@
     (setv bindings (last body))
     (setv bindings None))
   
+  (setv uniques (->> (filter (fn [x] (and (not (symbol? x))
+                                          (= (first x) 'unique)))
+                             body)
+                     (map (fn [x] (tuple (rest x))))
+                     (tuple)))
   (setv rules (list (map (fn [x]
                            `(queue-rule ~tre (new-rule (quote ~pattern)
                                                        (fn [~g!bindings] (~@x ~g!bindings))
+                                                       (quote ~uniques)
                                                        ~bindings)
                                         False))
+                         (filter (fn [x] (and (not (symbol? x))
+                                              (not (= (first x) 'unique))))
+                                 body))))
+  `(do
+    ~@rules))
+
+(defmacro/g! a-rule [tre pattern &rest body]
+  "add new assumption making rule to tiny rule engine"
+  (if (symbol? (last body))
+    (setv bindings (last body))
+    (setv bindings None))
+  
+  (setv uniques (, ))
+
+  (setv rules (list (map (fn [x]
+                           `(queue-rule ~tre (new-rule (quote ~pattern)
+                                                       (fn [~g!bindings] (~@x ~g!bindings))
+                                                       ~uniques
+                                                       ~bindings)
+                                        True))
                          (filter (fn [x] (not (symbol? x)))
                                  body))))
   `(do
@@ -83,10 +109,14 @@
   "show all assertions relating to given symbol"
   (ap-each (assertions tre)
            (when (in symbol it)
-             (print (.join " " it))))
+             (print (.join " " (if (isinstance it HyExpression)
+                                 (map str it)
+                                 it)))))
   (ap-each (assertion-queue tre)
            (when (in symbol it)
-             (print (.join " " it)))))
+             (print (.join " " (if (isinstance it HyExpression)
+                                 (map str it)
+                                 it))))))
 
 (defn title [tre]
   "title of tre"
@@ -147,7 +177,8 @@
   "run rule for assertion"
   (setv bindings (unify assertion
                         (first rule)
-                        (get rule 2)))
+                        (get rule 2)
+                        (get rule 3)))
   (when bindings
     ((second rule) bindings)))
 
@@ -157,12 +188,13 @@
     (.append (a-rule-queue tre) new-rule)
     (.append (rule-queue tre) new-rule)))
 
-(defn new-rule [pattern body-fn &optional bindings]
+(defn new-rule [pattern body-fn uniques &optional bindings]
   "create new rule from pattern and body"
   (, pattern body-fn
              (if bindings
                (copy-bindings bindings)
-               {})))
+               {})
+             uniques))
 
 
 (defn process-assertion-queue [tre]
@@ -187,25 +219,43 @@
   (in assertion (assertion-queue tre)))
 
 
-(defn unify [assertion pattern bindings]
+
+(defn unify [assertion pattern bindings unique-symbols]
   "unify assertion and pattern, return new bindings or None"
+
+  (setv new-bindings (copy-bindings bindings))
+  
+  (defn valid-value? [env sym value]
+    "check that symbol has unique value if required"
+    (->> (filter (fn [sym-pair]
+                   (in sym sym-pair))
+                 unique-symbols)
+         (map (fn [sym-list]
+                (all (map (fn [unique-sym]
+                            (or (= unique-sym sym)
+                                (not (in unique-sym new-bindings))
+                                (not (= (get new-bindings unique-sym)
+                                        value))))
+                          sym-list))))
+         (all)))
+  
+  (defn unify-sym [env (, assertion-sym pattern-sym)]
+    "unify two symbols while respecting env"
+    (cond [(is env None) None]
+          [(= assertion-sym pattern-sym) env]
+          [(and (var? pattern-sym)
+                (in pattern-sym env)
+                (= (get env pattern-sym) assertion-sym)) env]
+          [(and (var? pattern-sym)
+                (not (in pattern-sym env))
+                (valid-value? env pattern-sym assertion-sym)) (add-binding env 
+                                                                           pattern-sym 
+                                                                           assertion-sym)]
+          [True None]))
+  
   (if (= (len assertion) (len pattern))
     (reduce unify-sym (zip assertion pattern)
-            (copy-bindings bindings))))
-
-(defn unify-sym [env (, assertion-sym pattern-sym)]
-  "unify two symbols while respecting env"
-  (cond [(is env None) None]
-        [(= assertion-sym pattern-sym) env]
-        [(and (var? pattern-sym)
-              (in pattern-sym env)
-              (= (get env pattern-sym) assertion-sym)) env]
-        [(and (var? pattern-sym)
-              (not (in pattern-sym env))
-              (not (in assertion-sym (.values env)))) (add-binding env 
-                                                                   pattern-sym 
-                                                                   assertion-sym)]
-        [True None]))
+            new-bindings)))
 
 (defn fill-assertion [assertion bindings]
   "copy values of bindings into assertion"
