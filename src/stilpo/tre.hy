@@ -64,36 +64,42 @@
                              body)
                      (map (fn [x] (tuple (rest x))))
                      (tuple)))
-  (setv rules (list (map (fn [x]
-                           `(queue-rule ~tre (new-rule (quote ~pattern)
-                                                       (fn [~g!bindings] (~@x ~g!bindings))
-                                                       (quote ~uniques)
-                                                       ~bindings)
-                                        False))
-                         (filter (fn [x] (and (not (symbol? x))
-                                              (not (= (first x) 'unique))))
-                                 body))))
-  `(do
-    ~@rules))
+
+  (setv mod-bodies (list (map (fn [x]
+                                `(~@x ~g!bindings))
+                              (filter (fn [x] (and (not (symbol? x))
+                                                   (not (= (first x) 'unique))))
+                                      body)))) 
+
+  `(queue-rule ~tre (new-rule (quote ~pattern)
+                              (fn [~g!bindings] ~mod-bodies)
+                              (quote ~uniques)
+                              ~bindings)
+               False))
 
 (defmacro/g! a-rule [tre pattern &rest body]
-  "add new assumption making rule to tiny rule engine"
+  "add new rule to tiny rule engine"
   (if (symbol? (last body))
     (setv bindings (last body))
     (setv bindings None))
   
-  (setv uniques (, ))
+  (setv uniques (->> (filter (fn [x] (and (not (symbol? x))
+                                          (= (first x) 'unique)))
+                             body)
+                     (map (fn [x] (tuple (rest x))))
+                     (tuple)))
 
-  (setv rules (list (map (fn [x]
-                           `(queue-rule ~tre (new-rule (quote ~pattern)
-                                                       (fn [~g!bindings] (~@x ~g!bindings))
-                                                       ~uniques
-                                                       ~bindings)
-                                        True))
-                         (filter (fn [x] (not (symbol? x)))
-                                 body))))
-  `(do
-    ~@rules))
+  (setv mod-bodies (list (map (fn [x]
+                                `(~@x ~g!bindings))
+                              (filter (fn [x] (and (not (symbol? x))
+                                                   (not (= (first x) 'unique))))
+                                      body)))) 
+
+  `(queue-rule ~tre (new-rule (quote ~pattern)
+                              (fn [~g!bindings] ~mod-bodies)
+                              (quote ~uniques)
+                              ~bindings)
+               True))
 
 (defn run [tre]
   "process tre until all queues are empty"
