@@ -43,7 +43,7 @@
     (setv ~g!quoted (quote ~assertion))
     (if (debug ~tre)
       (if ~bindings
-        (print "asserting" (fill-assertion ~g!quoted ~bindings))
+        (print "asserting" (fill-assertion ~g!quoted ~bindings) ~bindings)
         (print "asserting" (HyExpression ~g!quoted) "<no bindings>")))
     (setv ~g!env (if ~bindings
                    ~bindings
@@ -52,6 +52,21 @@
     (when (not (or (assertion-defined? ~tre ~g!filled-assertion)
                    (assertion-queued? ~tre ~g!filled-assertion)))
       (.append (assertion-queue ~tre) ~g!filled-assertion))))
+
+(defmacro with-context [context &rest body]
+  "use named context"
+  (setv code (list (butlast body)))
+  (setv end (last body))
+  `((fn [~context]
+      ~code) ~end))
+
+(defmacro set! [context sym value]
+  "set value in context"
+  `(assoc ~context (quote ~sym) ~value))
+
+(defmacro get! [context sym]
+  "get value in context"
+  `(get ~context (quote ~sym)))
 
 (defmacro/g! rule [tre pattern &rest body]
   "add new rule to tiny rule engine"
@@ -66,13 +81,13 @@
                      (tuple)))
 
   (setv mod-bodies (list (map (fn [x]
-                                `(~@x ~g!bindings))
+                                `(~@x --tre-env--))
                               (filter (fn [x] (and (not (symbol? x))
                                                    (not (= (first x) 'unique))))
                                       body)))) 
 
   `(queue-rule ~tre (new-rule (quote ~pattern)
-                              (fn [~g!bindings] ~mod-bodies)
+                              (fn [--tre-env--] ~mod-bodies)
                               (quote ~uniques)
                               ~bindings)
                False))
@@ -115,14 +130,16 @@
   "show all assertions relating to given symbol"
   (ap-each (assertions tre)
            (when (in symbol it)
-             (print (.join " " (if (isinstance it HyExpression)
-                                 (map str it)
-                                 it)))))
+             (print (pp-assertion it))))
   (ap-each (assertion-queue tre)
            (when (in symbol it)
-             (print (.join " " (if (isinstance it HyExpression)
-                                 (map str it)
-                                 it))))))
+             (print (pp-assertion it)))))
+
+(defn pp-assertion [assertion]
+  "turn assertion into string"
+  (.join " " (if (isinstance assertion HyExpression)
+               (map str assertion)
+               assertion)))
 
 (defn title [tre]
   "title of tre"
@@ -311,9 +328,13 @@
 
 (defmacro/g! try-in-context [tre assertion &rest body]
   `(do (run ~tre)
-       (push-tre ~tre (+ "assuming that " (.join " " (quote ~assertion))))
+       (setv ~g!quoted (quote ~assertion))
+       (push-tre ~tre (+ "assuming that " (.join " " (if (isinstance ~g!quoted HyExpression)
+                                                       (map str ~g!quoted)
+                                                       ~g!quoted))))
        (assert! ~tre ~assertion)
        (run ~tre)
        (setv ~g!res (do ~@body))
        (pop-tre ~tre)
        ~g!res))
+
