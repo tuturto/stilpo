@@ -24,18 +24,14 @@
 
 (rule tre (speed is ?v)
       (rule tre (time is ?t)
-            (with-context bind
-              (set! bind ?d (* (get! bind ?v)
-                               (get! bind ?t)))
-              (assert! tre (distance is ?d) bind))))
+            (setv ?d (* ?v ?t))
+            (assert! tre (distance is ?d))))
 
 (rule tre (distance is ?d)
       (rule tre (endurance is ?e)
-            (with-context bind
-              (if (> (get! bind ?e)
-                     (get! bind ?d))
-                (assert! tre (mission status: good) bind)
-                (assert! tre (mission status: bad) bind)))))
+            (if (> ?e ?d)
+              (assert! tre (mission status: good))
+              (assert! tre (mission status: bad)))))
 
 (assert! tre (speed is 20))
 (assert! tre (time is 10))

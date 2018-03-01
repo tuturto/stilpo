@@ -25,7 +25,7 @@
 (require [stilpo.tre [assert! rule]])
 (import [stilpo.tre [create-tre run show true? push-tre pop-tre]])
 
-(setv tre (create-tre "family" :debug True))
+(setv tre (create-tre "family"))
 
 (assert! tre (Alice is parent of Bob))
 (assert! tre (Bob is parent of Charlie))

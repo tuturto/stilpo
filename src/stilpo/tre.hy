@@ -53,41 +53,47 @@
                    (assertion-queued? ~tre ~g!filled-assertion)))
       (.append (assertion-queue ~tre) ~g!filled-assertion))))
 
-(defmacro with-context [context &rest body]
-  "use named context"
-  (setv code (list (butlast body)))
-  (setv end (last body))
-  `((fn [~context]
-      ~code) ~end))
-
-(defmacro set! [context sym value]
-  "set value in context"
-  `(assoc ~context (quote ~sym) ~value))
-
-(defmacro get! [context sym]
-  "get value in context"
-  `(get ~context (quote ~sym)))
-
 (defmacro/g! rule [tre pattern &rest body]
   "add new rule to tiny rule engine"
   (if (symbol? (last body))
     (setv bindings (last body))
     (setv bindings None))
   
+  (defn rewrite-setv [elem]
+    "rewrite setv form"
+    (setv value (if (symbol? (get elem 2))
+                  (get elem 2)
+                  (rewrite-elem (get elem 2))))
+
+    `(assoc ~g!tre-env 
+            (quote ~(get elem 1))
+            ~value))
+  
+  (defn rewrite-elem [elem]
+    "rewrite part of rule"
+    (cond [(and (not (symbol? elem))
+                (in (first elem) (, 'assert! 'rule))) `(~@elem ~g!tre-env)]
+          [(and (not (symbol? elem))
+                (= (first elem) 'setv)) (rewrite-setv elem)]
+          [(and (symbol? elem)
+                (not (.startswith elem "?"))) elem]
+          [(and (symbol? elem)
+                (.startswith elem "?")) `(get ~g!tre-env (quote ~elem))]
+          [(not (symbol? elem)) (HyExpression (map rewrite-elem elem))]))
+
   (setv uniques (->> (filter (fn [x] (and (not (symbol? x))
                                           (= (first x) 'unique)))
                              body)
                      (map (fn [x] (tuple (rest x))))
                      (tuple)))
 
-  (setv mod-bodies (list (map (fn [x]
-                                `(~@x --tre-env--))
+  (setv mod-bodies (list (map rewrite-elem
                               (filter (fn [x] (and (not (symbol? x))
                                                    (not (= (first x) 'unique))))
                                       body)))) 
 
   `(queue-rule ~tre (new-rule (quote ~pattern)
-                              (fn [--tre-env--] ~mod-bodies)
+                              (fn [~g!tre-env] ~mod-bodies)
                               (quote ~uniques)
                               ~bindings)
                False))
