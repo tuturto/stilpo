@@ -134,12 +134,15 @@
 
 (defn show [tre symbol]
   "show all assertions relating to given symbol"
-  (ap-each (assertions tre)
-           (when (in symbol it)
-             (print (pp-assertion it))))
-  (ap-each (assertion-queue tre)
-           (when (in symbol it)
-             (print (pp-assertion it)))))
+  (ap-each (fetch tre symbol)
+           (print (pp-assertion it))))
+
+(defn fetch [tre symbol]
+  "fetch all assertions relating to given symbol"
+  (setv res [])
+  (.extend res (filter (fn [x] (in symbol x)) (assertions tre)))
+  (.extend res (filter (fn [x] (in symbol x)) (assertion-queue tre)))
+  res)
 
 (defn pp-assertion [assertion]
   "turn assertion into string"
