@@ -83,14 +83,14 @@
   
   (defn separator []
     "print separator line"
-    (print (.join "-" (repeat "+" (inc (len queens))))))
+    (print (.join "---" (repeat "+" (inc (len queens))))))
 
   (print)
   (separator)
   (for [(, x y) queens]
-    (print (.join " " (repeat "|" (inc x))) :end "")
-    (print "X" :end "")
-    (print (.join " " (repeat "|" (- (len queens) x))))
+    (print (.join "   " (repeat "|" (inc x))) :end "")
+    (print " X " :end "")
+    (print (.join "   " (repeat "|" (- (len queens) x))))
     (separator)))
 
 (-> (solve (build-tre)
