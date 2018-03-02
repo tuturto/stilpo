@@ -74,7 +74,26 @@
   
   (when solution tre))
 
+(defn display [tre]
+  "display board"
+  (setv queens (sorted (map (fn [x] (, (get x 1)
+                                       (get x 6)))
+                            (fetch tre 'queen))
+                       :key (fn [x] (second x))))
+  
+  (defn separator []
+    "print separator line"
+    (print (.join "-" (repeat "+" (inc (len queens))))))
+
+  (print)
+  (separator)
+  (for [(, x y) queens]
+    (print (.join " " (repeat "|" (inc x))) :end "")
+    (print "X" :end "")
+    (print (.join " " (repeat "|" (- (len queens) x))))
+    (separator)))
+
 (-> (solve (build-tre)
            (build-choice-sets 8))
-    (show 'queen))
+    (display))
 
