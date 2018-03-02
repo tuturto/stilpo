@@ -39,16 +39,18 @@
 
 (defmacro/g! assert! [tre assertion &optional bindings]
   "assert a fact"
-  `(do 
-    (setv ~g!quoted (quote ~assertion))
+  (if (symbol? assertion)
+    (setv quoted assertion)
+    (setv quoted `(quote ~assertion)))
+  `(do     
     (if (debug ~tre)
       (if ~bindings
-        (print "asserting" (fill-assertion ~g!quoted ~bindings) ~bindings)
-        (print "asserting" (HyExpression ~g!quoted) "<no bindings>")))
+        (print "asserting" (fill-assertion ~quoted ~bindings) ~bindings)
+        (print "asserting" (HyExpression ~quoted) "<no bindings>")))
     (setv ~g!env (if ~bindings
                    ~bindings
                    {}))
-    (setv ~g!filled-assertion (fill-assertion ~g!quoted ~g!env))
+    (setv ~g!filled-assertion (fill-assertion ~quoted ~g!env))
     (when (not (or (assertion-defined? ~tre ~g!filled-assertion)
                    (assertion-queued? ~tre ~g!filled-assertion)))
       (.append (assertion-queue ~tre) ~g!filled-assertion))))
@@ -336,11 +338,13 @@
   (:frames tre))
 
 (defmacro/g! try-in-context [tre assertion &rest body]
+  (if (symbol? assertion)
+    (setv quoted assertion)
+    (setv quoted `(quote ~assertion)))
   `(do (run ~tre)
-       (setv ~g!quoted (quote ~assertion))
-       (push-tre ~tre (+ "assuming that " (.join " " (if (isinstance ~g!quoted HyExpression)
-                                                       (map str ~g!quoted)
-                                                       ~g!quoted))))
+       (push-tre ~tre (+ "assuming that " (.join " " (if (isinstance ~quoted HyExpression)
+                                                       (map str ~quoted)
+                                                       ~quoted))))
        (assert! ~tre ~assertion)
        (run ~tre)
        (setv ~g!res (do ~@body))
