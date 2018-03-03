@@ -107,7 +107,9 @@
                                        (ap-map (create-new-path current-path it)
                                                (remove-loops current-path new-steps identical?))))))
     {:path solution
-     :length (len solution)
+     :length (if solution
+               (len solution)
+               None)
      :iterations iteration}))
 
 (defn closest-to-goal [queue]
