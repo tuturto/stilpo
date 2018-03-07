@@ -22,7 +22,7 @@
 
 ;; Is Alice grand parent of Charlie?
 
-(require [stilpo.tre [assert! rule]])
+(require [stilpo.tre [assert! rule try-in-context]])
 (import [stilpo.tre [create-tre run show true? push-tre pop-tre]])
 
 (setv tre (create-tre "family"))

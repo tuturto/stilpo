@@ -85,9 +85,11 @@
          (filter (fn [x]
                    (not (can-take-any? x queens))))
          (map place-queen)))
-
+  
   (setv solver (depth-first-solver :is-goal goal?
                                    :operators operators
                                    :is-identical identical?))
   (-> (solver (, ))
       (display)))
+
+(solve 8)

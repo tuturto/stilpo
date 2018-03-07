@@ -22,9 +22,9 @@
 
 ;; solve 8 queens problem with tiny rule engine
 
-(require [stilpo.tre [assert! rule]])
+(require [stilpo.tre [assert! rule try-in-context]])
 (import [copy [copy]]
-        [stilpo.tre [create-tre run show true? push-tre pop-tre]])
+        [stilpo.tre [create-tre run show true? push-tre pop-tre fetch]])
 
 (defn build-tre []
   "build tre for puzzle"

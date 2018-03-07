@@ -42,18 +42,19 @@
   (if (symbol? assertion)
     (setv quoted assertion)
     (setv quoted `(quote ~assertion)))
-  `(do     
-    (if (debug ~tre)
-      (if ~bindings
-        (print "asserting" (fill-assertion ~quoted ~bindings) ~bindings)
-        (print "asserting" (HyExpression ~quoted) "<no bindings>")))
-    (setv ~g!env (if ~bindings
-                   ~bindings
-                   {}))
-    (setv ~g!filled-assertion (fill-assertion ~quoted ~g!env))
-    (when (not (or (assertion-defined? ~tre ~g!filled-assertion)
-                   (assertion-queued? ~tre ~g!filled-assertion)))
-      (.append (assertion-queue ~tre) ~g!filled-assertion))))
+  `(do (import [stilpo.tre [debug fill-assertion assertion-defined?
+                            assertion-queued? assertion-queue]])
+       (if (debug ~tre)
+         (if ~bindings
+           (print "asserting" (fill-assertion ~quoted ~bindings) ~bindings)
+           (print "asserting" (HyExpression ~quoted) "<no bindings>")))
+       (setv ~g!env (if ~bindings
+                      ~bindings
+                      {}))
+       (setv ~g!filled-assertion (fill-assertion ~quoted ~g!env))
+       (when (not (or (assertion-defined? ~tre ~g!filled-assertion)
+                      (assertion-queued? ~tre ~g!filled-assertion)))
+         (.append (assertion-queue ~tre) ~g!filled-assertion))))
 
 (defmacro/g! rule [tre pattern &rest body]
   "add new rule to tiny rule engine"
@@ -94,11 +95,15 @@
                                                    (not (= (first x) 'unique))))
                                       body)))) 
 
-  `(queue-rule ~tre (new-rule (quote ~pattern)
-                              (fn [~g!tre-env] ~mod-bodies)
-                              (quote ~uniques)
-                              ~bindings)
-               False))
+  `(do (import [stilpo.tre [queue-rule new-rule fill-assertion
+                            assertion-defined? assertion-queued?
+                            assertion-queue push-tre pop-tre
+                            debug]])
+       (queue-rule ~tre (new-rule (quote ~pattern)
+                                  (fn [~g!tre-env] ~mod-bodies)
+                                  (quote ~uniques)
+                                  ~bindings)
+                   False)))
 
 (defmacro/g! a-rule [tre pattern &rest body]
   "add new rule to tiny rule engine"
@@ -341,7 +346,9 @@
   (if (symbol? assertion)
     (setv quoted assertion)
     (setv quoted `(quote ~assertion)))
-  `(do (run ~tre)
+  `(do (import [stilpo.tre [debug fill-assertion assertion-defined?
+                            assertion-queued? assertion-queue]])
+       (run ~tre)
        (push-tre ~tre (+ "assuming that " (.join " " (if (isinstance ~quoted HyExpression)
                                                        (map str ~quoted)
                                                        ~quoted))))

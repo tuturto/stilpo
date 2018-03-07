@@ -20,6 +20,9 @@
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;; THE SOFTWARE.
 
+(import [stilpo.tre [create-tre run show]])
+(require [stilpo.tre [rule assert! try-in-context]])
+
 (setv tre (create-tre "Mission planning"))
 
 (rule tre (speed is ?v)
