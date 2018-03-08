@@ -91,7 +91,8 @@
     (print (.join "   " (repeat "|" (inc x))) :end "")
     (print " X " :end "")
     (print (.join "   " (repeat "|" (- (len queens) x))))
-    (separator)))
+    (separator))
+  (print "assumptions:" (:assumption-counter tre)))
 
 (-> (solve (build-tre)
            (build-choice-sets 8))

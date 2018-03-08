@@ -30,7 +30,8 @@
    :assumption-queue []
    :rule-queue []
    :a-rule-queue []
-   :debug debug})
+   :debug debug
+   :assumption-counter 0})
 
 (defn create-frame [desc]
   {:description desc
@@ -322,6 +323,7 @@
   "pushes state of tre in stack and creates a new one"
   (assert (not (rule-queue tre)) "unprocessed rules in queue")
   (assert (not (assertion-queue tre)) "unprocessed assertions in queue")
+  (assoc tre :assumption-counter (inc (:assumption-counter tre)))
   (if (debug tre)
     (print "Pushing to stack:" desc))  
   (assoc tre :frames (+ (frames tre) (, (create-frame desc)))))
