@@ -232,7 +232,9 @@
          (map handler)
          (list))))
 
-(defn make-contradiction [])
+(defn make-contradiction [node]
+  "mark node as contradiction"
+  (assoc node :contradiction? True))
 
 (defn supporting-justification-for-node [node]
   "supporting justification for node"

@@ -13,6 +13,7 @@ Contents:
 
    cps
    tre
+   jtms
    license
 
 What is stilpo?
