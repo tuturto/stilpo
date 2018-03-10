@@ -103,10 +103,6 @@
              (out-node? (just-consequence justification)))   
     (turn-node-in (just-consequence justification) justification skip-rules)))
 
-(defn turn-justification-out [justification]
-  (assert (= (:type justification) 'justification))
-  "turn justification out if not all antecedents are in")
-
 (defn turn-node-in [node justification &optional [skip-rules False]]
   "turn node in because of justification"
   (assert (= (:type node) 'node))
@@ -143,9 +139,7 @@
     (assoc node :support 'enabled-assumption)
     (if (= old-value 'out)
       (for [justification (:consequences node)]
-        (turn-justification-in justification))
-      (for [justification (:consequences node)]
-        (turn-justification-out node))))
+        (turn-justification-in justification))))
   (check-contradictions (node-tms node)))
 
 (defn retract-assumption [node]
@@ -244,6 +238,12 @@
   "supporting justification for node"
   (:support node))
 
+(defn premise? [node]
+  "is this node premise?"
+  (any (list (filter (fn [just]
+                       (not (:antecedents just)))
+                     (:justifications node)))))
+
 (defn assumptions-of-node [node]
   "list of all assumptions of node"
   (setv res [])
@@ -255,7 +255,8 @@
                                                         (:antecedents just))
                                                       justifications))
                            (filter (fn [x]
-                                     (:assumption? x)))
+                                     (or (premise? x)
+                                         (:assumption? x))))
                            (list)))
     (setv justifications [])
     (for [candidate assumptions]
