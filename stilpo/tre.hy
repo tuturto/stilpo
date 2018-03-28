@@ -61,7 +61,7 @@
   "add new rule to tiny rule engine"
   (if (symbol? (last body))
     (setv bindings (last body))
-    (setv bindings None))
+    (setv bindings (HySymbol "None")))
   
   (defn rewrite-setv [elem]
     "rewrite setv form"
@@ -88,10 +88,10 @@
   (setv uniques (->> (filter (fn [x] (and (not (symbol? x))
                                           (= (first x) 'unique)))
                              body)
-                     (map (fn [x] (tuple (rest x))))
-                     (tuple)))
+                     (map (fn [x] (HyExpression (rest x))))
+                     (HyExpression)))
 
-  (setv mod-bodies (list (map rewrite-elem
+  (setv mod-bodies (HyExpression (map rewrite-elem
                               (filter (fn [x] (and (not (symbol? x))
                                                    (not (= (first x) 'unique))))
                                       body)))) 
@@ -101,7 +101,7 @@
                             assertion-queue push-tre pop-tre
                             debug]])
        (queue-rule ~tre (new-rule (quote ~pattern)
-                                  (fn [~g!tre-env] ~mod-bodies)
+                                  (fn [~g!tre-env] (do ~@mod-bodies))
                                   (quote ~uniques)
                                   ~bindings)
                    False)))

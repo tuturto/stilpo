@@ -40,8 +40,8 @@
     (print "path length: " (:length solution))
     (print "number of iterations: " (:iterations solution))))
 
-(def state {:jug-4 0
-            :jug-5 0})
+(setv state {:jug-4 0
+             :jug-5 0})
 
 (defn goal? [state]
   (or (= (:jug-4 state) 2)
@@ -105,13 +105,13 @@
   (and (= (:jug-4 state1) (:jug-4 state2))
        (= (:jug-5 state1) (:jug-5 state2))))
 
-(def b-solve (breadth-first-solver :is-goal goal?
-                                   :operators operators
-                                   :is-identical identical?))
+(setv b-solve (breadth-first-solver :is-goal goal?
+                                    :operators operators
+                                    :is-identical identical?))
 
-(def d-solve (depth-first-solver :is-goal goal?
-                                 :operators operators
-                                 :is-identical identical?))
+(setv d-solve (depth-first-solver :is-goal goal?
+                                  :operators operators
+                                  :is-identical identical?))
 
 (print)
 (print "solving jugs problem with breadth first search")

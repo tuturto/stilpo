@@ -20,7 +20,8 @@
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;; THE SOFTWARE.
 
-(require [stilpo.cps [operator]])
+(require [hy.contrib.walk [let]]
+         [stilpo.cps [operator]])
 
 (import [math [sqrt]]
         [stilpo.cps [breadth-first-solver depth-first-solver best-first-solver
@@ -62,7 +63,7 @@
         (print "number of iterations:" (:iterations solution)))))
 
 
-(def state
+(setv state
   (create-maze "xxxxxxxxxxxxxxxx"
                "x     x        x"
                "x  x  x Sx  x  x"
@@ -119,43 +120,47 @@
 
 (defn move-north? [state]
   "operator to move north"
-  (let [(, x y) (:location state)]
+  (let [x (first (:location state))
+        y (second (:location state))]
     (move state (, x (dec y)) "move north")))
 
 (defn move-east? [state]
   "operator to move east"
-  (let [(, x y) (:location state)]
+  (let [x (first (:location state))
+        y (second (:location state))]
     (move state (, (inc x) y) "move east")))
 
 (defn move-south? [state]
   "operator to move south"
-  (let [(, x y) (:location state)]
+  (let [x (first (:location state))
+        y (second (:location state))]
     (move state (, x (inc y)) "move south")))
 
 (defn move-west? [state]
   "operator to move west"
-  (let [(, x y) (:location state)]
+  (let [x (first (:location state))
+        y (second (:location state))]
     (move state (, (dec x) y) "move west")))
 
-(def b-solve (breadth-first-solver :is-goal goal?
-                                   :operators operators
-                                   :is-identical identical?))
+(setv b-solve (breadth-first-solver :is-goal goal?
+                                    :operators operators
+                                    :is-identical identical?))
 
-(def d-solve (depth-first-solver :is-goal goal?
-                                 :operators operators
-                                 :is-identical identical?))
+(setv d-solve (depth-first-solver :is-goal goal?
+                                  :operators operators
+                                  :is-identical identical?))
 
-(def best-solve (best-first-solver :is-goal goal?
-                                   :distance distance-left
-                                   :operators operators
-                                   :is-identical identical?))
+(setv best-solve (best-first-solver :is-goal goal?
+                                    :distance distance-left
+                                    :operators operators
+                                    :is-identical identical?))
 
 
-(def a* (a*-solver :is-goal goal?
-                   :distance distance-left
-                   :distance-between distance-between
-                   :operators operators
-                   :is-identical identical?))
+(setv a* (a*-solver :is-goal goal?
+                    :distance distance-left
+                    :distance-between distance-between
+                    :operators operators
+                    :is-identical identical?))
 
 (print "\nsolving maze depth first")
 (-> (d-solve state)
