@@ -22,6 +22,8 @@
 
 (require [hy.extra.anaphoric [ap-each]])
 
+(import [stilpo.tools [unify copy-bindings]])
+
 (defn create-tre [tre-name &optional [debug False]]
   "create a new tiny rule engine"
   {:title tre-name
@@ -236,7 +238,6 @@
                {})
              uniques))
 
-
 (defn process-assertion-queue [tre]
   "take first assertion in queue and process it"
   (when (assertion-queue tre)
@@ -258,45 +259,6 @@
   "check if given assertion is already queued"
   (in assertion (assertion-queue tre)))
 
-
-
-(defn unify [assertion pattern bindings unique-symbols]
-  "unify assertion and pattern, return new bindings or None"
-
-  (setv new-bindings (copy-bindings bindings))
-  
-  (defn valid-value? [env sym value]
-    "check that symbol has unique value if required"
-    (->> (filter (fn [sym-pair]
-                   (in sym sym-pair))
-                 unique-symbols)
-         (map (fn [sym-list]
-                (all (map (fn [unique-sym]
-                            (or (= unique-sym sym)
-                                (not (in unique-sym new-bindings))
-                                (not (= (get new-bindings unique-sym)
-                                        value))))
-                          sym-list))))
-         (all)))
-  
-  (defn unify-sym [env (, assertion-sym pattern-sym)]
-    "unify two symbols while respecting env"
-    (cond [(is env None) None]
-          [(= assertion-sym pattern-sym) env]
-          [(and (var? pattern-sym)
-                (in pattern-sym env)
-                (= (get env pattern-sym) assertion-sym)) env]
-          [(and (var? pattern-sym)
-                (not (in pattern-sym env))
-                (valid-value? env pattern-sym assertion-sym)) (add-binding env 
-                                                                           pattern-sym 
-                                                                           assertion-sym)]
-          [True None]))
-  
-  (if (= (len assertion) (len pattern))
-    (reduce unify-sym (zip assertion pattern)
-            new-bindings)))
-
 (defn fill-assertion [assertion bindings]
   "copy values of bindings into assertion"
   (defn get-value [sym]
@@ -304,20 +266,6 @@
       (get bindings sym)
       sym))
   (HyExpression (map get-value assertion)))
-
-(defn add-binding [bindings sym value]
-  "bind symbol to value"
-  (assoc bindings sym value)
-  bindings)
-
-(defn var? [sym]
-  "check if given symbol is variable"
-  (= (first sym) "?"))
-
-(defn copy-bindings [bindings]
-  "create copy of bindings"
-  (dict bindings))
-
 
 (defn push-tre [tre desc]
   "pushes state of tre in stack and creates a new one"
