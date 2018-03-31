@@ -20,42 +20,62 @@
 ;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 ;; THE SOFTWARE.
 
-(defn unify [assertion pattern bindings unique-symbols]
-  "unify assertion and pattern, return new bindings or None"
+(import [copy [copy]])
 
-  (setv new-bindings (copy-bindings bindings))
+(defn unify [assertion pattern bindings unique-symbols]
+  (defn unify-sym [state sym]
+    "unify single symbol"
+    (setv pattern-sym (first (:pattern state)))
+    (setv wildcard (:wildcard state))
+    (setv bindings (:bindings state))
+    (setv unique-symbols (:unique-symbols state))
+    
+    (cond [(:mismatch state) state]
+          [(matching-symbols? sym pattern-sym)
+           (dict state #**{:pattern (list (rest (:pattern state)))})]
+          
+          [(valid-joker? sym pattern-sym bindings unique-symbols) 
+           (dict state #**{:wildcard []
+                           :pattern (list (rest (:pattern state)))
+                           :bindings (dict (:bindings state)
+                                           #**{pattern-sym sym})})]
+          
+          [True (dict state #**{:mismatch True})]))
   
-  (defn valid-value? [env sym value]
-    "check that symbol has unique value if required"
-    (->> (filter (fn [sym-pair]
-                   (in sym sym-pair))
-                 unique-symbols)
-         (map (fn [sym-list]
-                (all (map (fn [unique-sym]
-                            (or (= unique-sym sym)
-                                (not (in unique-sym new-bindings))
-                                (not (= (get new-bindings unique-sym)
-                                        value))))
-                          sym-list))))
-         (all)))
-  
-  (defn unify-sym [env (, assertion-sym pattern-sym)]
-    "unify two symbols while respecting env"
-    (cond [(is env None) None]
-          [(= assertion-sym pattern-sym) env]
-          [(and (var? pattern-sym)
-                (in pattern-sym env)
-                (= (get env pattern-sym) assertion-sym)) env]
-          [(and (var? pattern-sym)
-                (not (in pattern-sym env))
-                (valid-value? env pattern-sym assertion-sym)) (add-binding env 
-                                                                           pattern-sym 
-                                                                           assertion-sym)]
-          [True None]))
-  
-  (if (= (len assertion) (len pattern))
-    (reduce unify-sym (zip assertion pattern)
-            new-bindings)))
+  (setv res (reduce unify-sym assertion {:pattern pattern
+                                         :wildcard []
+                                         :bindings bindings
+                                         :mismatch False
+                                         :unique-symbols unique-symbols}))
+  (if (not (:mismatch res))
+    (:bindings res)
+    {}))
+
+(defn matching-symbols? [assert-sym pattern-sym]
+  (and (not (var? pattern-sym))
+       (= assert-sym pattern-sym)))
+
+(defn valid-joker? [assert-sym pattern-sym bindings unique-symbols]
+  (and (any-var? pattern-sym)
+       (or (and (in pattern-sym bindings)
+                (= (get bindings pattern-sym)
+                   assert-sym))           
+           (and (not (in pattern-sym bindings))
+                (valid-value? bindings pattern-sym assert-sym unique-symbols)))))
+
+(defn valid-value? [bindings sym value unique-symbols]
+  "check that symbol has unique value if required"
+  (->> (filter (fn [sym-pair]
+                 (in sym sym-pair))
+               unique-symbols)
+       (map (fn [sym-list]
+              (all (map (fn [unique-sym]
+                          (or (= unique-sym sym)
+                              (not (in unique-sym bindings))
+                              (not (= (get bindings unique-sym)
+                                      value))))
+                        sym-list))))
+       (all)))
 
 (defn copy-bindings [bindings]
   "create copy of bindings"
@@ -63,9 +83,15 @@
 
 (defn var? [sym]
   "check if given symbol is variable"
+  (or (any-var? sym)
+      (wildcard-var? sym)))
+
+(defn any-var? [sym]
+  "is given symbol is any variable"
   (= (first sym) "?"))
 
-(defn add-binding [bindings sym value]
-  "bind symbol to value"
-  (assoc bindings sym value)
-  bindings)
+(defn wildcard-var? [sym]
+  "is given symbol wildcard variable"
+  (= (first sym) "*"))
+
+
