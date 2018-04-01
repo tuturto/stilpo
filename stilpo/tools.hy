@@ -67,10 +67,11 @@
                                          :unique-symbols unique-symbols}))
 
   (when (first (:wildcard res))
-    (if (valid-value? (:bindings res)
-                      (first (:wildcard res))
-                      (second (:wildcard res))
-                      (:unique-symbols res))
+    (if (and (not (:pattern res))
+             (valid-value? (:bindings res)
+                           (first (:wildcard res))
+                           (second (:wildcard res))
+                           (:unique-symbols res)))
       (setv res (dict res #**{:bindings (dict (:bindings res)
                                               #**{(first (:wildcard res))
                                                   (second (:wildcard res))})}))
@@ -78,7 +79,15 @@
   
   (if (not (:mismatch res))
     (:bindings res)
-    {}))
+    None))
+
+(defn fill-assertion [assertion bindings]
+  "copy values of bindings into assertion"
+  (defn get-value [sym]
+    (if (in sym bindings)
+      (get bindings sym)
+      sym))
+  (HyExpression (flatten (map get-value assertion))))
 
 (defn starting-wildcard? [sym pattern wildcard]
   (and pattern
@@ -102,7 +111,8 @@
                      unique-symbols)))
 
 (defn matching-symbols? [assert-sym pattern-sym]
-  (and (not (var? pattern-sym))
+  (and pattern-sym
+       (not (var? pattern-sym))
        (= assert-sym pattern-sym)))
 
 (defn valid-joker? [assert-sym pattern-sym bindings unique-symbols]
@@ -132,16 +142,18 @@
   (dict bindings))
 
 (defn var? [sym]
-  "check if given symbol is variable"
+  "check if given symbol is variable"  
   (or (any-var? sym)
       (wildcard-var? sym)))
 
 (defn any-var? [sym]
   "is given symbol is any variable"
-  (= (first sym) "?"))
+  (and sym
+       (= (first sym) "?")))
 
 (defn wildcard-var? [sym]
   "is given symbol wildcard variable"
-  (= (first sym) "*"))
+  (and sym
+       (= (first sym) "*")))
 
 

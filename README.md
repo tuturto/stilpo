@@ -2,8 +2,9 @@ Intro
 =====
 Stilpo is a set of problem solving routines that can be extended to solve
 various kinds of problems. Some examples and test cases are also provided.
-The system is based on ideas shown in Building Problem Solvers by Kenneth D.
-Forbus and Johan de Kleer.
+The system is based on ideas in two books: "Building Problem Solvers" by 
+Kenneth D. Forbus and Johan de Kleer and "Paradigms of Artificial Intelligence 
+Programming: Case Studies in Common Lisp" by Peter Norvig.
 
 System Requirements
 ===================

@@ -22,7 +22,7 @@
 
 (require [hy.extra.anaphoric [ap-each]])
 
-(import [stilpo.tools [unify copy-bindings]])
+(import [stilpo.tools [unify copy-bindings fill-assertion]])
 
 (defn create-tre [tre-name &optional [debug False]]
   "create a new tiny rule engine"
@@ -258,14 +258,6 @@
 (defn assertion-queued? [tre assertion]
   "check if given assertion is already queued"
   (in assertion (assertion-queue tre)))
-
-(defn fill-assertion [assertion bindings]
-  "copy values of bindings into assertion"
-  (defn get-value [sym]
-    (if (in sym bindings)
-      (get bindings sym)
-      sym))
-  (HyExpression (map get-value assertion)))
 
 (defn push-tre [tre desc]
   "pushes state of tre in stack and creates a new one"

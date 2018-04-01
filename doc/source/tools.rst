@@ -11,7 +11,7 @@ unify
 wildcard values. If unification is successful, a dictionary containing captured
 variables is returned. If unification failed, ``None`` is returned instead.
 
-Interface ``(unify assertion pattern bindings unique-symbols)``
+Interface ``(unify [assertion pattern bindings unique-symbols])``
 
    * ``assertion`` s-expression
 
@@ -40,3 +40,20 @@ Interface ``(unify assertion pattern bindings unique-symbols)``
 
    => (unify '(foo bar foo) '(?x bar ?y) {} (, (, '?x '?y)))
    None
+
+fill-assertion
+--------------
+
+``fill-assertion`` replaces variables in assertion with their respective values
+from supplied bindings.
+
+Interface ``(fill-assertion [assertion bindings])``
+
+   * ``assertion`` s-expression containing ?x and *x variables
+
+   * ``bindings`` dictionary containing variables and their values
+
+.. code:: hy
+
+   => (fill-assertion '(Hello ?x) {'?x 'World})
+   '(Hello World)
