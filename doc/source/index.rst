@@ -14,6 +14,7 @@ Contents:
    cps
    tre
    jtms
+   tools
    license
 
 What is stilpo?

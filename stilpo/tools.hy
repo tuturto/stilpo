@@ -31,25 +31,75 @@
     (setv unique-symbols (:unique-symbols state))
     
     (cond [(:mismatch state) state]
-          [(matching-symbols? sym pattern-sym)
+
+          [(starting-wildcard? sym (:pattern state) (:wildcard state))
+           (dict state #**{:wildcard (, pattern-sym `(~sym))
+                           :pattern (list (rest (:pattern state)))})]
+
+          [(valid-wildcard? sym (:pattern state) (:wildcard state))
+           (dict state #**{:wildcard (, (first (:wildcard state))
+                                        (+ (second (:wildcard state)) `(~sym)))})]
+
+          [(ending-wildcard? sym (:pattern state) (:wildcard state) bindings unique-symbols)
+           (unify-sym (dict state #**{:wildcard (, '())
+                                      :bindings (dict (:bindings state)
+                                                      #**{(first (:wildcard state))
+                                                          (second (:wildcard state))})})
+                      sym)]
+          
+          [(and (matching-symbols? sym pattern-sym)
+                (not (first (:wildcard state))))
            (dict state #**{:pattern (list (rest (:pattern state)))})]
           
-          [(valid-joker? sym pattern-sym bindings unique-symbols) 
+          [(and (valid-joker? sym pattern-sym bindings unique-symbols) 
+                (not (first (:wildcard state))))
            (dict state #**{:wildcard []
                            :pattern (list (rest (:pattern state)))
                            :bindings (dict (:bindings state)
                                            #**{pattern-sym sym})})]
-          
+
           [True (dict state #**{:mismatch True})]))
   
   (setv res (reduce unify-sym assertion {:pattern pattern
-                                         :wildcard []
+                                         :wildcard (, None '())
                                          :bindings bindings
                                          :mismatch False
                                          :unique-symbols unique-symbols}))
+
+  (when (first (:wildcard res))
+    (if (valid-value? (:bindings res)
+                      (first (:wildcard res))
+                      (second (:wildcard res))
+                      (:unique-symbols res))
+      (setv res (dict res #**{:bindings (dict (:bindings res)
+                                              #**{(first (:wildcard res))
+                                                  (second (:wildcard res))})}))
+      (setv res (dict res #**{:mismatch True}))))
+  
   (if (not (:mismatch res))
     (:bindings res)
     {}))
+
+(defn starting-wildcard? [sym pattern wildcard]
+  (and pattern
+       (not (first wildcard))
+       (wildcard-var? (first pattern))))
+
+(defn valid-wildcard? [sym pattern wildcard]
+  (or (and pattern
+           (first wildcard)
+           (not (= sym (first pattern))))
+      (and (not pattern)
+           (first wildcard))))
+
+(defn ending-wildcard? [sym pattern wildcard bindings unique-symbols]
+  (and (first wildcard)
+       pattern
+       (= sym (first pattern))
+       (valid-value? bindings 
+                     (first wildcard)
+                     (second wildcard)
+                     unique-symbols)))
 
 (defn matching-symbols? [assert-sym pattern-sym]
   (and (not (var? pattern-sym))
