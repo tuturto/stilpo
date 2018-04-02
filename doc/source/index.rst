@@ -23,7 +23,9 @@ What is stilpo?
 Stilpo is a generic ai library for Hy, although at least parts of it should be
 usable by Python programs too. It is based on ideas explained in excellent
 `Building Problem Solvers by Kenneth D. Forbus and Johan de Kleer
-<http://www.qrg.northwestern.edu/bps/readme.html>`_.
+<http://www.qrg.northwestern.edu/bps/readme.html>`_ and 
+`Paradigms of Artificial Intelligence Programming: Case Studies in Common Lisp 
+by Peter Norvig <https://github.com/norvig/paip-lisp>`_.
 
 `Stilpo <https://en.wikipedia.org/wiki/Stilpo>`_ was also a greek philosopher,
 who was interested in logic and dialetic.
