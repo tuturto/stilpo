@@ -135,11 +135,10 @@
                  (assoc new-state :frogs new-frogs)
                  
                  new-state))
-     :desc (.format "move frog {} from {} to {}, while capturing frog {} at {}"
-                    frog-id
+     :desc (.format "move {} frog from {} to {}, while capturing frog at {}"
+                    (if (:red frog) "red" "green")
                     start-lilypad-id
                     destination-lilypad-id
-                    captured-frog-id
                     in-between-lilypad-id)}))
 
 (defn frog-moves [frog]
@@ -148,7 +147,8 @@
         connections (:connections lilypad)
         valid-connections (filter (fn [pair]
                                     (and (is (:frog (first pair)) None)
-                                         (is-not (:frog (second pair)) None))) 
+                                         (is-not (:frog (second pair)) None)
+                                         (not (:red (:frog (second pair)))))) 
                                   connections)
         moves (list (map (fn [pair]
                            (move-frog frog pair))
@@ -157,11 +157,7 @@
 
 (defn operators [state]
   "all valid operators and their descriptions for given state"  
-  (list (->> (if (> 1 (len (:frogs state)))
-               (filter (fn [frog]
-                         (not (:red frog)))
-                       (:frogs state))
-               (:frogs state))
+  (list (->> (:frogs state)
              (map frog-moves)
              (filter (fn [moves]
                        (> (len moves) 0)))
@@ -186,18 +182,12 @@
 (setv state (place-frogs (create-board)
                          frog-positions))
 
-(setv b-solve (breadth-first-solver :is-goal goal?
-                                    :operators operators
-                                    :is-identical identical?))
-
 (setv d-solve (depth-first-solver :is-goal goal?
                                   :operators operators
                                   :is-identical identical?))
 
-(print "\nsolving puzzle depth first")
+(print "\nsolving puzzle")
 (-> (d-solve state)
     (pretty-print))
 
-(print "\nsolving puzzle breadth first")
-(-> (b-solve state)
-    (pretty-print))
+
