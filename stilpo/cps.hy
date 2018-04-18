@@ -81,9 +81,10 @@
     (setv iteration 0)
     (if distance
       (add-queue queue [[{:state state
-                         :distance-left (distance state)
-                         :distance-so-far 0
-                         :total-distance (distance state)}]])
+                          :steps "foooo"
+                          :distance-left (distance state)
+                          :distance-so-far 0
+                          :total-distance (distance state)}]])
       (add-queue queue [[{:state state}]]))
     
     (while queue
