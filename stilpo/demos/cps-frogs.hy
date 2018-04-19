@@ -90,13 +90,11 @@
   "print out the solution"
   (let [path (:path solution)]
     (if path           
-      (do (print "solution found")
-          (print "iterations:" (:iterations solution))
-          (for [step path]
-            (when (in :action (.keys step))
-              (print (:desc (:action step))))))
-      (do (print "no solution found")
-          (print "iterations:" (:iterations solution))))))
+      (do (print (.format "solution found in {} iterations" (:iterations solution)))
+       (for [step path]
+         (when (in :action (.keys step))
+           (print (:desc (:action step))))))
+      (do (print "no solution found")))))
 
 (defn goal? [state]
   "have we reached the end?"
@@ -135,11 +133,10 @@
                  (assoc new-state :frogs new-frogs)
                  
                  new-state))
-     :desc (.format "move {} frog from {} to {}, while capturing frog at {}"
+     :desc (.format "{} {} -> {}"
                     (if (:red frog) "red" "green")
                     start-lilypad-id
-                    destination-lilypad-id
-                    in-between-lilypad-id)}))
+                    destination-lilypad-id)}))
 
 (defn frog-moves [frog]
   "get valid moves for a frog"
@@ -186,8 +183,19 @@
                                   :operators operators
                                   :is-identical identical?))
 
-(print "\nsolving puzzle")
-(-> (d-solve state)
-    (pretty-print))
+(setv levels [(, "Level 1" ["D1" "A1" "C1" "A5"])
+              (, "Level 17" ["C2" "A1" "B1" "C1" "D2" "B2" "A5" "B3" "D1" "B4"])              
+              (, "Level 35" ["D1" "A1" "B1" "C1" "D2" "B2" "A5" "B3" "C2" "B4" "A4"])              
+              (, "Level 40" ["B2" "A1" "B1" "A2" "C1" "D2" "A5" "D1" "C2" "A3" "B4" "A4"])])
 
-
+(for [level levels]
+  (let [frogs (second level)
+        state (place-frogs (create-board)
+                           frogs)]
+    (print (first level))
+    (print (.format "Frogs at {0} (red), {1}"
+                    (first frogs)
+                    (.join ", " (rest frogs))))
+    (-> (d-solve state)
+        (pretty-print))
+    (print)))
