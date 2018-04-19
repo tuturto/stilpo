@@ -40,12 +40,6 @@
     (.append (:connections origin) connection)
     (.append (:connections (first connection)) (, origin (second connection)))))
 
-(defn create-frog [id pad &optional red]
-  "create new frog"
-  {:id id
-   :lilypad pad
-   :red red})
-
 (defn create-board []
   "create board for puzzle number 13"
   (let [lilypads (dict-comp id (create-lilypad id) [id lilypad-ids])]
@@ -69,22 +63,10 @@
 
 (defn place-frogs [lilypads frog-positions]
   "place frogs on board"
-  (let [frog-pairs (list (zip (range 13)
-                        frog-positions))
-        regular-frogs (list (map (fn [pair]
-                                   (let [lilypad (get lilypads (second pair))
-                                         frog (create-frog (first pair)
-                                                           lilypad)]
-                                     (assoc lilypad :frog frog)
-                                     frog))
-                                 (rest frog-pairs)))
-        red-lilypad (get lilypads (second (first frog-pairs)))
-        red-frog (create-frog (first (first frog-pairs))
-                              red-lilypad
-                              True)]
-    (assoc (get lilypads (second (first frog-pairs))) :frog red-frog)
-    {:lilypads lilypads
-     :frogs (+ regular-frogs [red-frog])}))
+  (assoc (get lilypads (first frog-positions)) :frog "red")
+  (for [position (rest frog-positions)]
+    (assoc (get lilypads position) :frog "green"))
+  lilypads)
 
 (defn pretty-print [solution]
   "print out the solution"
@@ -94,67 +76,53 @@
        (for [step path]
          (when (in :action (.keys step))
            (print (:desc (:action step))))))
-      (do (print "no solution found")))))
+      (do (print (.format "no solution found in {} iterations" (:iterations solution)))))))
 
 (defn goal? [state]
   "have we reached the end?"
-  (and (= (len (:frogs state)) 1)
-       (:red (first (:frogs state)))))
+  (not (list (filter (fn [lilypad]
+                       (= (:frog lilypad) "green"))
+                     (.values state)))))
 
-(defn lilypad-by-id [id state]
-  (get (:lilypads state) id))
-
-(defn frog-by-id [id state]
-  (first (filter (fn [x]
-                   (= (:id x) id))
-                 (:frogs state))))
-
-(defn move-frog [frog dest-connection]
-  (let [start-lilypad-id (:id (:lilypad frog))
-        destination-lilypad-id (:id (first dest-connection))
-        in-between-lilypad-id (:id (second dest-connection))
-        captured-frog-id (:id (:frog (second dest-connection)))
-        frog-id (:id frog)]
+(defn move-frog [source connection]
+  (let [start-lilypad-id (:id source)
+        destination-lilypad-id (:id (first connection))
+        in-between-lilypad-id (:id (second connection))
+        frog (:frog source)]
     {:action (fn [state]
                (let [new-state (deepcopy state)
-                     start-lilypad (lilypad-by-id start-lilypad-id new-state)
-                     in-between-lilypad (lilypad-by-id in-between-lilypad-id new-state)
-                     destination-lilypad (lilypad-by-id destination-lilypad-id new-state)
-                     frog (frog-by-id frog-id new-state)
-                     captured-frog (frog-by-id captured-frog-id new-state)
-                     new-frogs (list (filter (fn [frog]
-                                         (not (= (:id frog)
-                                                 (:id captured-frog))))
-                                       (:frogs new-state)))]
+                     start-lilypad (get new-state start-lilypad-id)
+                     in-between-lilypad (get new-state in-between-lilypad-id)
+                     destination-lilypad (get new-state destination-lilypad-id)]
                  (assoc in-between-lilypad :frog None)
                  (assoc start-lilypad :frog None)
                  (assoc destination-lilypad :frog frog)
-                 (assoc frog :lilypad destination-lilypad)
-                 (assoc new-state :frogs new-frogs)
                  
                  new-state))
      :desc (.format "{} {} -> {}"
-                    (if (:red frog) "red" "green")
+                    frog
                     start-lilypad-id
                     destination-lilypad-id)}))
 
-(defn frog-moves [frog]
-  "get valid moves for a frog"
-  (let [lilypad (:lilypad frog)
-        connections (:connections lilypad)
-        valid-connections (filter (fn [pair]
-                                    (and (is (:frog (first pair)) None)
-                                         (is-not (:frog (second pair)) None)
-                                         (not (:red (:frog (second pair)))))) 
-                                  connections)
-        moves (list (map (fn [pair]
-                           (move-frog frog pair))
-                         valid-connections))]
-    moves))
+(defn frog-moves [lilypad]
+  "get valid moves for a frog on a given lilypad"
+  (if (:frog lilypad)
+    (let [connections (:connections lilypad)
+          valid-connections (filter (fn [pair]
+                                      (and (is (:frog (first pair)) None)
+                                           (is-not (:frog (second pair)) None)
+                                           (not (= "red"
+                                                   (:frog (second pair)))))) 
+                                    connections)
+          moves (list (map (fn [connection]
+                             (move-frog lilypad connection))
+                           valid-connections))]
+      moves)
+    []))
 
 (defn operators [state]
   "all valid operators and their descriptions for given state"  
-  (list (->> (:frogs state)
+  (list (->> (.values state)
              (map frog-moves)
              (filter (fn [moves]
                        (> (len moves) 0)))
@@ -162,22 +130,17 @@
 
 (defn identical? [state1 state2]
   "are two given states identical?"
-  (when (= (len (:frogs state1))
-           (len (:frogs state2)))
-    (all (map (fn [frog]     
-                (= (:id (:lilypad frog))
-                   (:id (:lilypad (frog-by-id (:id frog) state1)))))
-              (:frogs state2)))))
-
-(setv frog-positions ["B2" "A1" "B1" "C1" "D1" "A3" "B4"])
+  (let [lilypad-pairs (zip (.values state1)
+                           (.values state2))]
+    (all (map (fn [pair]
+                (= (:frog (first pair))
+                   (:frog (second pair))))
+              lilypad-pairs))))
 
 (setv lilypad-ids ["A1" "A2" "A3" "A4" "A5"
                    "B1" "B2" "B3" "B4"
                    "C1" "C2"
                    "D1" "D2"])
-
-(setv state (place-frogs (create-board)
-                         frog-positions))
 
 (setv d-solve (depth-first-solver :is-goal goal?
                                   :operators operators
